@@ -1,0 +1,25 @@
+{
+  "name": "tnt-backend",
+  "version": "0.0.1",
+  "description": "A backend server for the Tales and Triumps Project",
+  "main": "index.js",
+  "scripts": {
+    "generate": "npx ts-node --transpile-only src/schema",
+    "dev": "ts-node-dev --transpile-only --no-notify --exit-child src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Isard Botha",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "prisma": "^3.10.0",
+    "ts-node-dev": "^1.1.8",
+    "typescript": "^4.6.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^3.10.0",
+    "apollo-server": "^3.6.3",
+    "dotenv": "^16.0.0",
+    "graphql": "^15.8.0",
+    "nexus": "^1.2.0"
+  }
+}
