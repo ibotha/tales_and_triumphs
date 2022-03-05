@@ -1,49 +1,56 @@
-import { objectType, nonNull, stringArg, mutationField, queryField } from "nexus";
-import { NexusGenObjects } from "../../generated/nexus-typegen";
+import {
+	objectType,
+	nonNull,
+	stringArg,
+	mutationField,
+	queryField,
+} from "nexus";
 
 export const User = objectType({
-    name: "User",
-    definition(t) {
-        t.nonNull.id("id")
-        t.nonNull.string("username")
-        t.nonNull.string("email")
-    }
-})
-
-let users: NexusGenObjects["User"][] = [
-    {
-        id: "1",
-        email: "billy.bob@gmail.com",
-        username: "Billy"
-    },
-    {
-        id: "2",
-        email: "jinny.weasly@gmail.com",
-        username: "Jinny"
-    }
-]
+	name: "User",
+	definition(t) {
+		t.nonNull.id("id");
+		t.nonNull.string("username");
+		t.nonNull.string("email");
+		t.nonNull.list.nonNull.field("createdWorlds", {
+			type: "World",
+			resolve(parent, args, context) {
+				return context.prisma.user
+					.findUnique({ where: { id: parent.id } })
+					.createdWorlds();
+			},
+		});
+		t.nonNull.list.nonNull.field("roles", {
+			type: "WorldRole",
+			resolve(parent, args, context) {
+				return context.prisma.user
+					.findUnique({ where: { id: parent.id } })
+					.roles();
+			},
+		});
+		t.int("role", {
+			description: "Role level within the context of the world.",
+		});
+	},
+});
 
 export const userQuery = queryField((t) => {
-    t.nonNull.list.nonNull.field("users", {
-        type: "User",
-        resolve(parent, args, context, info) {
-            return context.prisma.user.findMany();
-        }
-    })
-})
+	t.nonNull.list.nonNull.field("users", {
+		type: "User",
+		resolve(parent, args, context, info) {
+			return context.prisma.user.findMany();
+		},
+	});
 
-export const userMutation = mutationField((t) => {
-    t.field("registerUser", {
-        type: "User",
-        args: {
-            username: nonNull(stringArg()),
-            email: nonNull(stringArg()),
-        },
-        async resolve(parent, args, { prisma }) {
-            const { username, email } = args;
+	t.field("me", {
+		type: "User",
+		resolve(parent, _, context) {
+			if (!context.req.session.user) return null;
+			return context.prisma.user.findUnique({
+				where: { id: context.req.session.user.id },
+			});
+		},
+	});
+});
 
-            const user = await prisma.user.create({ data: { email, username } });
-            return user;
-        }
-    })
-})
+export const userMutation = mutationField((t) => {});

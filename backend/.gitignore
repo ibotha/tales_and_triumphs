@@ -1,4 +1,8 @@
 generated
 
 .env
-prisma
+prisma/migrations
+*.db
+*.sqlite
+*.rdb
+*-journal

@@ -5,11 +5,11 @@ The backend component of the tales and triumphs project, this functions as a gra
 ## Contents
 
 - [Tales and Triumphs Backend](#tales-and-triumphs-backend)
-  - [Contents](#contents)
-  - [Setup](#setup)
-    - [Requirements](#requirements)
-    - [Steps](#steps)
-  - [Config](#config)
+	- [Contents](#contents)
+	- [Setup](#setup)
+		- [Requirements](#requirements)
+		- [Steps](#steps)
+	- [Config](#config)
 
 ## Setup
 
@@ -30,4 +30,5 @@ Running through the following steps should leave you with a running server in no
 ## Config
 
 * USE_PLAYGROUND - If set this will use apollo playground instead of apollo studio.
-* \_\_prod__ - If set certain optimisations will be made for performance and security.
+* PROD - If set certain optimisations will be made for performance and security.
+* SESSION_SECRET - Set to whatever session secret you would like

@@ -1,10 +1,20 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, User } from "@prisma/client";
+import { ExpressContext } from "apollo-server-express";
+import { Request, Response } from "express";
+import { NexusGenObjects } from "../generated/nexus-typegen";
 export const prisma = new PrismaClient();
 
-export interface Context {    // 1
-    prisma: PrismaClient;
+export interface Context {
+	// 1
+	prisma: PrismaClient;
+	req: Request & { session: { user?: User } };
+	res: Response;
 }
 
-export const context: Context = {   // 2
-    prisma,
+export const context: (context: ExpressContext) => Context = ({ req, res }) => {
+	return {
+		prisma,
+		req,
+		res,
+	};
 };

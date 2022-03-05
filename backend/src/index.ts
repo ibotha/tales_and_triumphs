@@ -1,21 +1,84 @@
-require('dotenv').config();
-import { ApolloServer } from 'apollo-server';
-import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
+require("dotenv").config();
+import express from "express";
+import { ApolloServer } from "apollo-server-express";
+import {
+  ApolloServerPluginLandingPageGraphQLPlayground,
+  ApolloServerPluginLandingPageDisabled,
+} from "apollo-server-core";
 
-import { schema } from './schema';
+import Redis from "ioredis";
+import { schema } from "./schema";
 import { context } from "./context";
+import connectRedis from "connect-redis";
+import session from "express-session";
+import cors from "cors";
 
-console.log(process.env)
-const usePlayground = process.env.USE_PLAYGROUND
+const COOKIE_NAME = "session-cookie";
 
-export const server = new ApolloServer({
+async function startServer() {
+  let app = express();
+
+  // Sessions with redis
+  const redis = new Redis(process.env.REDIS_URL);
+  const RedisStore = connectRedis(session);
+
+  app.set("trust proxy", 1);
+  app.use(
+    cors({
+      origin: process.env.CORS_ORIGIN,
+      credentials: true,
+    })
+  );
+
+  app.use(
+    session({
+      name: COOKIE_NAME,
+      store: new RedisStore({
+        client: redis,
+        disableTouch: true,
+      }),
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years,
+        httpOnly: true,
+        secure: process.env.PROD ? true : false,
+        sameSite: "lax",
+      },
+      saveUninitialized: false,
+      secret: process.env.SESSION_SECRET!,
+      resave: false,
+    })
+  );
+
+  // Apollo GraphQL server
+  const usePlayground = process.env.USE_PLAYGROUND;
+
+  let plugins = [];
+  if (process.env.PROD) {
+    plugins.push(ApolloServerPluginLandingPageDisabled());
+  } else {
+    if (usePlayground)
+      plugins.push(ApolloServerPluginLandingPageGraphQLPlayground());
+  }
+
+  let server = new ApolloServer({
     schema: schema,
-    plugins: usePlayground ? [ApolloServerPluginLandingPageGraphQLPlayground()] : [],
-    context
-});
+    plugins: plugins,
+    context,
+  });
+  await server.start();
+  server.applyMiddleware({
+    app,
+    cors: {
+      origin: process.env.CORS_ORIGIN,
+    },
+  });
 
-const port = 4000;
+  // Host App
+  const port = 4000;
 
-server.listen({ port }).then(({ url }) => {
-    console.log("Apollo server hosted on (" + url + ")");
-})
+  app.listen({ port }, () => {
+    console.log("Apollo server hosted on port " + port);
+  });
+}
+
+startServer();
