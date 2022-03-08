@@ -22,7 +22,6 @@ export const WorldRole = objectType({
     t.nonNull.field("user", {
       type: "User",
       async resolve(parent, args, { prisma }) {
-        console.log(parent);
         let user = await prisma.worldRole
           .findUnique({ where: { id: parent.id } })
           .user();
@@ -33,7 +32,6 @@ export const WorldRole = objectType({
     t.nonNull.field("world", {
       type: "World",
       async resolve(parent, args, { prisma }) {
-        console.log(parent);
         let user = await prisma.worldRole
           .findUnique({ where: { id: parent.id } })
           .world();
@@ -53,7 +51,6 @@ export const World = objectType({
     t.nonNull.field("creator", {
       type: "User",
       async resolve(parent, args, { prisma }) {
-        console.log(parent);
         let user = await prisma.world
           .findUnique({ where: { id: parent.id } })
           .creator();
@@ -64,7 +61,6 @@ export const World = objectType({
     t.nonNull.list.nonNull.field("users", {
       type: "User",
       async resolve(parent, args, { prisma }) {
-        console.log(parent);
         let roles = await prisma.world
           .findUnique({ where: { id: parent.id } })
           .roles();
@@ -78,15 +74,37 @@ export const World = objectType({
           });
           if (user) {
             user.role = r.level;
-            console.log(user);
           }
           return user;
         });
         users = users.filter((u) => {
           return u !== null;
         });
-        console.log(users);
         return users as Prisma.Prisma__UserClient<User>[];
+      },
+    });
+    t.nonNull.list.nonNull.field("categories", {
+      type: "DocumentCategory",
+      resolve: (parent, _, context) => {
+        return context.prisma.documentCategory.findMany({
+          where: { worldId: parent.id },
+        });
+      },
+    });
+    t.nonNull.list.nonNull.field("documents", {
+      type: "Document",
+      resolve: (parent, _, context) => {
+        return context.prisma.document.findMany({
+          where: { worldId: parent.id },
+        });
+      },
+    });
+    t.nonNull.list.nonNull.field("folders", {
+      type: "Folder",
+      resolve: (parent, _, context) => {
+        return context.prisma.folder.findMany({
+          where: { worldId: parent.id },
+        });
       },
     });
   },
