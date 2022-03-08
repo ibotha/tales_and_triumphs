@@ -11,54 +11,115 @@
 // }
 
 datasource db {
-    provider = "sqlite"
-    url      = "file:./dev.sqlite"
+  provider = "sqlite"
+  url      = "file:./dev.sqlite"
 }
 
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 model User {
-    id            String      @id @default(uuid())
-    createdAt     DateTime    @default(now())
-    updatedAt     DateTime    @updatedAt
-    username      String
-    email         String      @unique
-    pwHash        String
-    createdWorlds World[]
-    roles         WorldRole[]
-    groups        UserGroup[]
+  id               String             @id @default(uuid())
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  username         String
+  email            String             @unique
+  pwHash           String
+  createdWorlds    World[]
+  roles            WorldRole[]
+  groups           UserGroup[]
+  Document         Document[]
+  DocumentCategory DocumentCategory[]
+  Folder           Folder[]
 }
 
 model World {
-    id        String      @id @default(uuid())
-    createdAt DateTime    @default(now())
-    updatedAt DateTime    @updatedAt
-    name      String
-    creator   User        @relation(fields: [creatorId], references: [id])
-    creatorId String
-    groups    UserGroup[]
-    roles     WorldRole[]
+  id         String             @id @default(uuid())
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  name       String
+  creator    User               @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId  String
+  groups     UserGroup[]
+  roles      WorldRole[]
+  categories DocumentCategory[]
+  folders    Folder[]
+  documents  Document[]
 
-    @@unique([name, creatorId])
+  @@unique([name, creatorId])
 }
 
 model WorldRole {
-    id      String @id @default(uuid())
-    user    User   @relation(fields: [userId], references: [id])
-    userId  String
-    level   Int
-    world   World  @relation(fields: [worldId], references: [id])
-    worldId String
+  id      String @id @default(uuid())
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  String
+  level   Int
+  world   World  @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId String
 
-    @@unique([userId, worldId])
+  @@unique([userId, worldId])
 }
 
 model UserGroup {
-    id      String @id @default(uuid())
-    name    String
-    world   World  @relation(fields: [worldId], references: [id])
-    worldId String
-    users   User[]
+  id      String @id @default(uuid())
+  name    String
+  world   World  @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId String
+  users   User[]
+}
+
+model Document {
+  id          String            @id @default(uuid())
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  mentions    Document[]        @relation("linkedDocuments")
+  mentionedIn Document[]        @relation("linkedDocuments")
+  contents    String
+  name        String            @default("document")
+  accessLevel Int               @default(0)
+  category    DocumentCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId  String?
+  folder      Folder?           @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  folderId    String?
+  world       World             @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId     String
+  creator     User?             @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId   String?
+
+  @@unique([worldId, folderId, name])
+}
+
+model DocumentCategory {
+  id        String     @id @default(uuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  world     World      @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId   String
+  name      String     @default("category")
+  colour    String     @default("#333333")
+  documents Document[]
+  creator   User?      @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId String?
+
+  @@unique([worldId, name])
+}
+
+model Folder {
+  id           String     @id @default(uuid())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  name         String     @default("folder")
+  colour       String     @default("#333333")
+  documents    Document[]
+  accessLevel  Int        @default(0)
+  subfolders   Folder[]   @relation("SubFolders")
+  parentFolder Folder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId     String?
+  world        World      @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId      String
+  creator      User?      @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId    String?
+
+  @@unique([parentId, name, worldId])
 }

@@ -1,48 +1,56 @@
 import { intArg, mutationField, nonNull, stringArg } from "nexus";
+import { roleLevels, userAllowed } from "../Auth/worldAuth";
 import { generateErrorType } from "./Errors";
 
 export const AssignmentPayload = generateErrorType({
-	name: "AssignmentPayload",
-	wrappedType: "WorldRole",
+  name: "AssignmentPayload",
+  wrappedType: "WorldRole",
 });
 
 export const Mutation = mutationField((t) => {
-	t.field("assignWorldRole", {
-		type: "AssignmentPayload",
-		args: {
-			userId: nonNull(stringArg()),
-			worldId: nonNull(stringArg()),
-			level: nonNull(intArg()),
-		},
-		async resolve(parent, { userId, worldId, level }, context) {
-			if (!context.req.session.user)
-				return { errors: ["Must be logged in!"] };
+  t.field("assignWorldRole", {
+    type: "AssignmentPayload",
+    args: {
+      userId: nonNull(stringArg()),
+      worldId: nonNull(stringArg()),
+      level: intArg(),
+    },
+    async resolve(parent, { userId, worldId, level }, context) {
+      if (
+        !(await userAllowed(
+          worldId,
+          Math.min(roleLevels.TRUSTED, level || roleLevels.ADMIN),
+          context
+        ))
+      ) {
+        return { errors: ["You do not have the right permissions!"] };
+      }
 
-			let role = await context.prisma.worldRole.findUnique({
-				where: {
-					userId_worldId: {
-						userId: context.req.session.user.id,
-						worldId,
-					},
-				},
-			});
-			if (role && role.level == 0) {
-				return {
-					data: context.prisma.worldRole.create({
-						data: {
-							worldId,
-							userId,
-							level,
-						},
-					}),
-				};
-			}
+      if (!level) {
+        context.prisma.worldRole.delete({
+          where: { userId_worldId: { userId, worldId } },
+        });
+        return { data: null };
+      }
 
-			return {
-				errors: [
-					"You don't appear to have enough permissions in that world!",
-				],
-			};
-		},
-	});
+      return {
+        data: context.prisma.worldRole.upsert({
+          where: {
+            userId_worldId: {
+              worldId,
+              userId,
+            },
+          },
+          update: {
+            level,
+          },
+          create: {
+            worldId,
+            userId,
+            level,
+          },
+        }),
+      };
+    },
+  });
 });
