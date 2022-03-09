@@ -1,5 +1,5 @@
 import { nonNull, objectType, queryField, stringArg } from "nexus";
-import { roleLevels, userAllowed } from "../Auth/worldAuth";
+import { roleLevels, userHasWorldRole } from "../Auth/worldAuth";
 
 export const DocumentCategory = objectType({
   name: "DocumentCategory",
@@ -46,7 +46,7 @@ export const documentCategoryQuery = queryField((t) => {
       worldId: nonNull(stringArg()),
     },
     async resolve(parent, { worldId }, context) {
-      if (!(await userAllowed(worldId, roleLevels.USER, context)))
+      if (!(await userHasWorldRole(worldId, roleLevels.USER, context)))
         throw Error("You are not allowed to access this world.");
       let ret = await context.prisma.documentCategory.findMany({
         where: { worldId },

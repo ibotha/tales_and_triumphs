@@ -7,7 +7,7 @@ import {
   queryField,
   stringArg,
 } from "nexus";
-import { roleLevels, userAllowed } from "../Auth/worldAuth";
+import { roleLevels, userHasWorldRole } from "../Auth/worldAuth";
 import { generateErrorType } from "./Errors";
 
 export const WorldWrapper = generateErrorType({
@@ -15,45 +15,18 @@ export const WorldWrapper = generateErrorType({
   wrappedType: "World",
 });
 
-export const WorldRole = objectType({
-  name: "WorldRole",
-  definition(t) {
-    t.nonNull.id("id");
-    t.nonNull.field("user", {
-      type: "User",
-      async resolve(parent, args, { prisma }) {
-        let user = await prisma.worldRole
-          .findUnique({ where: { id: parent.id } })
-          .user();
-        if (!user) throw Error("Could not find a valid role");
-        return user;
-      },
-    });
-    t.nonNull.field("world", {
-      type: "World",
-      async resolve(parent, args, { prisma }) {
-        let user = await prisma.worldRole
-          .findUnique({ where: { id: parent.id } })
-          .world();
-        if (!user) throw Error("Could not find a valid role");
-        return user;
-      },
-    });
-    t.nonNull.int("level");
-  },
-});
-
 export const World = objectType({
   name: "World",
   definition(t) {
     t.nonNull.id("id");
+    t.nonNull.id("creatorId");
     t.nonNull.string("name");
     t.nonNull.field("creator", {
       type: "User",
       async resolve(parent, args, { prisma }) {
-        let user = await prisma.world
-          .findUnique({ where: { id: parent.id } })
-          .creator();
+        let user = await prisma.user.findUnique({
+          where: { id: parent.creatorId },
+        });
         if (!user) throw Error("Could not find a valid user");
         return user;
       },
@@ -63,24 +36,13 @@ export const World = objectType({
       async resolve(parent, args, { prisma }) {
         let roles = await prisma.world
           .findUnique({ where: { id: parent.id } })
-          .roles();
-        let users = roles.map(async (r) => {
-          let user:
-            | (User & {
-                role?: number;
-              })
-            | null = await prisma.user.findUnique({
-            where: { id: r.userId },
-          });
-          if (user) {
-            user.role = r.level;
-          }
-          return user;
+          .roles({ include: { user: {} } });
+        let ret = roles.map((role) => {
+          let user: any = role.user;
+          user.role = role.level;
+          return role.user;
         });
-        users = users.filter((u) => {
-          return u !== null;
-        });
-        return users as Prisma.Prisma__UserClient<User>[];
+        return ret;
       },
     });
     t.nonNull.list.nonNull.field("categories", {
@@ -131,7 +93,7 @@ export const worldMutation = mutationField((t) => {
             roles: {
               create: {
                 userId: req.session.user.id,
-                level: 0,
+                level: roleLevels.ADMIN,
               },
             },
           },
@@ -155,7 +117,8 @@ export const worldMutation = mutationField((t) => {
       id: nonNull(stringArg()),
     },
     async resolve(parent, { id }, context) {
-      if (!(await userAllowed(id, roleLevels.ADMIN, context))) return false;
+      if (!(await userHasWorldRole(id, roleLevels.ADMIN, context)))
+        return false;
       await context.prisma.world.delete({ where: { id } });
       return true;
     },
@@ -165,7 +128,7 @@ export const worldMutation = mutationField((t) => {
 export const worldQuery = queryField((t) => {
   t.nonNull.list.nonNull.field("worlds", {
     type: "World",
-    resolve(parent, args, { prisma }) {
+    resolve(parent, args, { prisma }, info) {
       return prisma.world.findMany();
     },
   });

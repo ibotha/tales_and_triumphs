@@ -20,18 +20,33 @@ generator client {
 }
 
 model User {
-  id               String             @id @default(uuid())
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  username         String
-  email            String             @unique
-  pwHash           String
-  createdWorlds    World[]
-  roles            WorldRole[]
-  groups           UserGroup[]
-  Document         Document[]
-  DocumentCategory DocumentCategory[]
-  Folder           Folder[]
+  id            String      @id @default(uuid())
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  username      String
+  email         String      @unique
+  pwHash        String
+  createdWorlds World[]
+  roles         WorldRole[]
+  groups        UserGroup[]
+
+  // Category Relations
+  createdCategories DocumentCategory[]
+
+  // Document relations
+  createdDocuments  Document[] @relation("CreatedDocuments")
+  readOnlyDocuments Document[] @relation("ReadOnlyDocuments")
+  editableDocuments Document[] @relation("EditableDocuments")
+
+  // Folder relations
+  createdFolders  Folder[] @relation("CreatedFolders")
+  readOnlyFolders Folder[] @relation("ReadOnlyFolders")
+  editableFolders Folder[] @relation("EditableFolders")
+
+  // Document Template relations
+  createdDocumentTemplates  DocumentTemplate[] @relation("CreatedDocumentTemplates")
+  readOnlyDocumentTemplates DocumentTemplate[] @relation("ReadOnlyDocumentTemplates")
+  editableDocumentTemplates DocumentTemplate[] @relation("EditableDocumentTemplates")
 }
 
 model World {
@@ -44,9 +59,10 @@ model World {
   groups     UserGroup[]
   roles      WorldRole[]
   categories DocumentCategory[]
-  folders    Folder[]
-  documents  Document[]
 
+  documents         Document[]
+  folders           Folder[]
+  documentTemplates DocumentTemplate[]
   @@unique([name, creatorId])
 }
 
@@ -75,19 +91,23 @@ model Document {
   updatedAt   DateTime          @updatedAt
   mentions    Document[]        @relation("linkedDocuments")
   mentionedIn Document[]        @relation("linkedDocuments")
-  contents    String
+  content     String
   name        String            @default("document")
-  accessLevel Int               @default(0)
   category    DocumentCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   categoryId  String?
   folder      Folder?           @relation(fields: [folderId], references: [id], onDelete: Cascade)
   folderId    String?
-  world       World             @relation(fields: [worldId], references: [id], onDelete: Cascade)
-  worldId     String
-  creator     User?             @relation(fields: [creatorId], references: [id], onDelete: SetNull)
-  creatorId   String?
 
-  @@unique([worldId, folderId, name])
+
+  // Access Control
+  accessLevel Int     @default(0)
+  world       World   @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId     String
+  creator     User?   @relation("CreatedDocuments", fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId   String?
+  readOnly    User[]  @relation("ReadOnlyDocuments")
+  edit        User[]  @relation("EditableDocuments")
+  @@unique([folderId, name])
 }
 
 model DocumentCategory {
@@ -112,14 +132,38 @@ model Folder {
   name         String     @default("folder")
   colour       String     @default("#333333")
   documents    Document[]
-  accessLevel  Int        @default(0)
   subfolders   Folder[]   @relation("SubFolders")
   parentFolder Folder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: Cascade)
   parentId     String?
-  world        World      @relation(fields: [worldId], references: [id], onDelete: Cascade)
-  worldId      String
-  creator      User?      @relation(fields: [creatorId], references: [id], onDelete: SetNull)
-  creatorId    String?
 
-  @@unique([parentId, name, worldId])
+
+  // Access Control
+  accessLevel Int     @default(0)
+  world       World   @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId     String
+  creator     User?   @relation("CreatedFolders", fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId   String?
+  readOnly    User[]  @relation("ReadOnlyFolders")
+  edit        User[]  @relation("EditableFolders")
+  @@unique([parentId, name])
+}
+
+model DocumentTemplate {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String   @unique
+  content   String
+
+  // Access Control
+
+  accessLevel Int     @default(0)
+  world       World   @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId     String
+  creator     User?   @relation("CreatedDocumentTemplates", fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId   String?
+  readOnly    User[]  @relation("ReadOnlyDocumentTemplates")
+  edit        User[]  @relation("EditableDocumentTemplates")
+
+  @@unique([name, worldId])
 }
