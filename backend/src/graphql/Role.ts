@@ -231,7 +231,6 @@ export const Mutation = mutationField((t) => {
         data,
         include: { edit: {}, readOnly: {} },
       });
-      console.log(users);
       return {
         item,
         accessLevel: ret.accessLevel,
@@ -248,4 +247,3 @@ export const Mutation = mutationField((t) => {
     },
   });
 });
-console.log("here");

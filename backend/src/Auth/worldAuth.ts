@@ -102,7 +102,6 @@ export const considerAccessLevel = (
   level: ObjectAccessLevel,
   accessLevel: ObjectAccessLevel
 ) => {
-  console.log(accessLevel, level);
   switch (level) {
     case "READ":
       if (accessLevel === "READ" || accessLevel === "WRITE") return;

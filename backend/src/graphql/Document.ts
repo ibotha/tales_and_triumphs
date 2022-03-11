@@ -68,9 +68,14 @@ export const documentMutation = mutationField((t) => {
       name: nonNull(stringArg()),
       content: nonNull(stringArg()),
       parentFolderId: stringArg(),
+      categoryId: stringArg(),
       worldId: nonNull(stringArg()),
     },
-    async resolve(parent, { name, content, worldId, parentFolderId }, context) {
+    async resolve(
+      parent,
+      { name, content, worldId, parentFolderId, categoryId },
+      context
+    ) {
       if (
         !(await userHasWorldRole(worldId, Math.min(roleLevels.USER), context))
       ) {
@@ -86,6 +91,7 @@ export const documentMutation = mutationField((t) => {
           name,
           content,
           folderId: parentFolderId || undefined,
+          categoryId: categoryId || undefined,
           accessLevel: 0,
           worldId,
           creatorId: role?.userId,
@@ -105,9 +111,14 @@ export const documentMutation = mutationField((t) => {
       id: nonNull(stringArg()),
       content: stringArg(),
       parentFolderId: stringArg(),
+      categoryId: stringArg(),
       name: stringArg(),
     },
-    resolve: async (parent, { id, content, name, parentFolderId }, context) => {
+    resolve: async (
+      parent,
+      { id, content, name, parentFolderId, categoryId },
+      context
+    ) => {
       let authRes = await userCanAccessDocument(id, "WRITE", context);
       if (authRes !== true) return null;
       let ret = await context.prisma.document.update({
@@ -116,6 +127,7 @@ export const documentMutation = mutationField((t) => {
           content: content || undefined,
           name: name || undefined,
           folderId: parentFolderId || undefined,
+          categoryId: categoryId || undefined,
         },
       });
       return ret;

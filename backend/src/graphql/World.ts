@@ -104,7 +104,6 @@ export const worldMutation = mutationField((t) => {
           return {
             errors: ["World names must be unique."],
           };
-        console.log(e);
         return {
           errors: ["Something Happened!"],
         };

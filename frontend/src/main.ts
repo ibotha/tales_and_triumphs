@@ -5,7 +5,7 @@ import urql, { Client, fetchExchange, dedupExchange } from "@urql/vue";
 import { cacheExchange } from "@urql/exchange-graphcache";
 
 const client = new Client({
-  url: "http://localhost:4000/graphql",
+  url: "http://192.168.0.167:4000/graphql",
   fetchOptions: {
     credentials: "include",
   },
@@ -16,6 +16,17 @@ const client = new Client({
         Mutation: {
           logout(_result, args, cache) {
             cache.invalidate("Query", "me");
+          },
+          login(
+            _result: {
+              login: { fieldErrors: { [key: string]: string }[] | null };
+            },
+            args,
+            cache
+          ) {
+            if (!_result.login.fieldErrors) {
+              cache.invalidate("Query", "me");
+            }
           },
         },
       },
