@@ -5,26 +5,33 @@ export enum roleLevels {
   ADMIN,
   TRUSTED,
   USER,
+  PUBLIC,
 }
 
 type userAllowedOptions = {};
+
+export const getUserWorldRole = async (
+  worldId: string,
+  context: Context
+): Promise<roleLevels> => {
+  if (!context.req.session.user) return roleLevels.PUBLIC;
+  let userId = context.req.session.user.id;
+  let role = await context.prisma.worldRole.findUnique({
+    where: { userId_worldId: { worldId, userId } },
+  });
+  if (!role) return roleLevels.PUBLIC;
+  return role.level;
+};
 
 export const userHasWorldRole = async (
   worldId: string,
   level: number,
   context: Context
 ): Promise<boolean> => {
-  if (!context.req.session.user) return false;
-  let userId = context.req.session.user.id;
-  let role = await context.prisma.worldRole.findUnique({
-    where: { userId_worldId: { worldId, userId } },
-  });
-  if (!role) return false;
-  if (role.level <= level) return true;
-  return false;
+  return (await getUserWorldRole(worldId, context)) <= level;
 };
 
-type ObjectAccessLevel = "READ" | "WRITE";
+type ObjectAccessLevel = "READ" | "WRITE" | "NONE";
 
 const getUserAccessLevelOnObject = async (
   object: { worldId: string; accessLevel: number },
@@ -52,29 +59,49 @@ const getUserAccessLevelCommon = async (
   type: string,
   context: any
 ) => {
-  let obj = await context.prisma[type].findUnique({
+  let object = await context.prisma[type].findUnique({
     where: { id },
-    select: { accessLevel: true, worldId: true },
+    select: {
+      id: true,
+      readAccessLevel: true,
+      world: { select: { id: true } },
+    },
   });
-  if (!obj) throw Error(`Could not find that ${type}!`);
-  let accessLevel = await getUserAccessLevelOnObject(obj, context);
-  if (accessLevel) return accessLevel;
-
-  let editable = !!(await context.prisma[type].findFirst({
-    where: {
-      edit: { some: { id: context.req.session.user!.id } },
-    },
-    select: { id: true },
-  }));
-  if (editable) return "WRITE";
-  let readOnly = !!(await context.prisma[type].findFirst({
-    where: {
-      readOnly: { some: { id: context.req.session.user!.id } },
-    },
-    select: { id: true },
-  }));
-  if (readOnly) return "READ";
-  throw Error(`You do not have permissions to access this ${type}!`);
+  if (object) {
+    if (context.req.session.user) {
+      let userAccessLevel = await getUserWorldRole(object.world.id, context);
+      if (
+        await context.prisma[type].findFirst({
+          where: {
+            AND: {
+              id,
+              OR: [
+                { edit: { some: { id: context.req.session.user.id } } },
+                { writeAccessLevel: { gte: userAccessLevel } },
+              ],
+            },
+          },
+        })
+      )
+        return "WRITE";
+      if (
+        await context.prisma[type].findFirst({
+          where: {
+            AND: {
+              id,
+              OR: [
+                { readOnly: { some: { id: context.req.session.user.id } } },
+                { readAccessLevel: { gte: userAccessLevel } },
+              ],
+            },
+          },
+        })
+      )
+        return "READ";
+    }
+    if (object.readAccessLevel === roleLevels.PUBLIC) return "READ";
+  }
+  return "NONE";
 };
 
 export const getUserAccessLevelOnDocument = async (

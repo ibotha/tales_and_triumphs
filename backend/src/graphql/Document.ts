@@ -45,7 +45,7 @@ export const Document = objectType({
           .findUnique({
             where: { id: parent.id },
           })
-          .folder();
+          .parentFolder();
       },
     });
     t.field("creator", {
@@ -90,9 +90,8 @@ export const documentMutation = mutationField((t) => {
         data: {
           name,
           content,
-          folderId: parentFolderId || undefined,
+          parentFolderId: parentFolderId || undefined,
           categoryId: categoryId || undefined,
-          accessLevel: 0,
           worldId,
           creatorId: role?.userId,
           edit: {
@@ -126,7 +125,7 @@ export const documentMutation = mutationField((t) => {
         data: {
           content: content || undefined,
           name: name || undefined,
-          folderId: parentFolderId || undefined,
+          parentFolderId: parentFolderId || undefined,
           categoryId: categoryId || undefined,
         },
       });

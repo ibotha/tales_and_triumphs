@@ -9,14 +9,7 @@ let logoutMutation = useMutation(gql`
 </script>
 
 <template>
-  <div>
-    <input
-      value="Logout"
-      type="button"
-      class="btn"
-      v-on:click="logoutMutation.executeMutation({})"
-    />
-  </div>
+  <div v-on:click="logoutMutation.executeMutation({})"><slot>Logout</slot></div>
 </template>
 
 <style lang="scss" scoped></style>

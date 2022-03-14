@@ -37,8 +37,19 @@ export const User = objectType({
           .roles();
       },
     });
-    t.int("role", {
+    t.field("role", {
+      type: "WorldRole",
+      args: {
+        worldId: nonNull(stringArg()),
+      },
       description: "Role level within the context of the world.",
+      resolve: (parent, { worldId }, context) => {
+        return context.prisma.worldRole.findUnique({
+          where: {
+            userId_worldId: { userId: parent.id, worldId },
+          },
+        });
+      },
     });
   },
 });

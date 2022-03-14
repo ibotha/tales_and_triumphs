@@ -26,7 +26,7 @@
 <script setup lang="ts">
 import { gql, useMutation } from "@urql/vue";
 import { ref, type Ref } from "vue";
-import FormComponent from "@/components/Form/FormComponent.vue";
+import FormComponent from "@/components/form/FormComponent.vue";
 import * as Yup from "yup";
 import { convertFieldErrors } from "@/util/errors";
 import { useRouter } from "vue-router";

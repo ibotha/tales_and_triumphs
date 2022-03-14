@@ -55,17 +55,24 @@ export const World = objectType({
     });
     t.nonNull.list.nonNull.field("documents", {
       type: "Document",
-      resolve: (parent, _, context) => {
+      args: {
+        parentFolderId: stringArg(),
+      },
+      resolve: (parent, { parentFolderId }, context) => {
         return context.prisma.document.findMany({
-          where: { worldId: parent.id },
+          where: {
+            worldId: parent.id,
+          },
         });
       },
     });
-    t.nonNull.list.nonNull.field("folders", {
+    t.field("rootFolder", {
       type: "Folder",
       resolve: (parent, _, context) => {
-        return context.prisma.folder.findMany({
-          where: { worldId: parent.id },
+        return context.prisma.folder.findFirst({
+          where: {
+            AND: { worldId: parent.id, parentFolderId: null },
+          },
         });
       },
     });
@@ -89,11 +96,21 @@ export const worldMutation = mutationField((t) => {
         let world = await prisma.world.create({
           data: {
             name,
-            creator: { connect: { id: req.session.user.id } },
+            creator: { connect: { id: req.session.user!.id } },
             roles: {
               create: {
-                userId: req.session.user.id,
+                userId: req.session.user!.id,
                 level: roleLevels.ADMIN,
+              },
+            },
+            folders: {
+              create: {
+                name: "root",
+                readAccessLevel: roleLevels.PUBLIC,
+                creatorId: req.session.user!.id,
+                edit: {
+                  connect: { id: req.session.user!.id },
+                },
               },
             },
           },
@@ -104,6 +121,7 @@ export const worldMutation = mutationField((t) => {
           return {
             errors: ["World names must be unique."],
           };
+        console.log(e);
         return {
           errors: ["Something Happened!"],
         };
@@ -125,10 +143,29 @@ export const worldMutation = mutationField((t) => {
 });
 
 export const worldQuery = queryField((t) => {
+  t.field("world", {
+    type: "World",
+    args: {
+      id: nonNull(stringArg()),
+    },
+    resolve(parent, { id }, { prisma }, info) {
+      return prisma.world.findUnique({ where: { id } });
+    },
+  });
   t.nonNull.list.nonNull.field("worlds", {
     type: "World",
     resolve(parent, args, { prisma }, info) {
       return prisma.world.findMany();
+    },
+  });
+  t.list.nonNull.field("myWorlds", {
+    type: "World",
+    resolve(parent, args, { prisma, req }) {
+      if (!req.session.user) return null;
+
+      return prisma.world.findMany({
+        where: { roles: { some: { userId: req.session.user.id } } },
+      });
     },
   });
 });

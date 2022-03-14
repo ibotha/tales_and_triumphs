@@ -16,7 +16,8 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["interactiveTransactions"]
 }
 
 model User {
@@ -86,28 +87,29 @@ model UserGroup {
 }
 
 model Document {
-  id          String            @id @default(uuid())
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  mentions    Document[]        @relation("linkedDocuments")
-  mentionedIn Document[]        @relation("linkedDocuments")
-  content     String
-  name        String            @default("document")
-  category    DocumentCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  categoryId  String?
-  folder      Folder?           @relation(fields: [folderId], references: [id], onDelete: Cascade)
-  folderId    String?
+  id             String            @id @default(uuid())
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  mentions       Document[]        @relation("linkedDocuments")
+  mentionedIn    Document[]        @relation("linkedDocuments")
+  content        String
+  name           String            @default("document")
+  category       DocumentCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId     String?
+  parentFolder   Folder?           @relation(fields: [parentFolderId], references: [id], onDelete: Cascade)
+  parentFolderId String?
 
 
   // Access Control
-  accessLevel Int     @default(0)
-  world       World   @relation(fields: [worldId], references: [id], onDelete: Cascade)
-  worldId     String
-  creator     User?   @relation("CreatedDocuments", fields: [creatorId], references: [id], onDelete: SetNull)
-  creatorId   String?
-  readOnly    User[]  @relation("ReadOnlyDocuments")
-  edit        User[]  @relation("EditableDocuments")
-  @@unique([folderId, name])
+  readAccessLevel  Int     @default(1)
+  writeAccessLevel Int     @default(0)
+  world            World   @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId          String
+  creator          User?   @relation("CreatedDocuments", fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId        String?
+  readOnly         User[]  @relation("ReadOnlyDocuments")
+  edit             User[]  @relation("EditableDocuments")
+  @@unique([parentFolderId, name, worldId])
 }
 
 model DocumentCategory {
@@ -126,26 +128,28 @@ model DocumentCategory {
 }
 
 model Folder {
-  id           String     @id @default(uuid())
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  name         String     @default("folder")
-  colour       String     @default("#333333")
-  documents    Document[]
-  subfolders   Folder[]   @relation("SubFolders")
-  parentFolder Folder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: Cascade)
-  parentId     String?
+  id             String     @id @default(uuid())
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  name           String     @default("folder")
+  colour         String     @default("#333333")
+  documents      Document[]
+  subfolders     Folder[]   @relation("SubFolders")
+  parentFolder   Folder?    @relation("SubFolders", fields: [parentFolderId], references: [id], onDelete: Cascade)
+  parentFolderId String?
 
 
   // Access Control
-  accessLevel Int     @default(0)
-  world       World   @relation(fields: [worldId], references: [id], onDelete: Cascade)
-  worldId     String
-  creator     User?   @relation("CreatedFolders", fields: [creatorId], references: [id], onDelete: SetNull)
-  creatorId   String?
-  readOnly    User[]  @relation("ReadOnlyFolders")
-  edit        User[]  @relation("EditableFolders")
-  @@unique([parentId, name])
+  readAccessLevel  Int     @default(1)
+  writeAccessLevel Int     @default(0)
+  world            World   @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId          String
+  creator          User?   @relation("CreatedFolders", fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId        String?
+  readOnly         User[]  @relation("ReadOnlyFolders")
+  edit             User[]  @relation("EditableFolders")
+
+  @@unique([parentFolderId, name, worldId])
 }
 
 model DocumentTemplate {
@@ -156,14 +160,14 @@ model DocumentTemplate {
   content   String
 
   // Access Control
-
-  accessLevel Int     @default(0)
-  world       World   @relation(fields: [worldId], references: [id], onDelete: Cascade)
-  worldId     String
-  creator     User?   @relation("CreatedDocumentTemplates", fields: [creatorId], references: [id], onDelete: SetNull)
-  creatorId   String?
-  readOnly    User[]  @relation("ReadOnlyDocumentTemplates")
-  edit        User[]  @relation("EditableDocumentTemplates")
+  readAccessLevel  Int     @default(1)
+  writeAccessLevel Int     @default(0)
+  world            World   @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId          String
+  creator          User?   @relation("CreatedDocumentTemplates", fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId        String?
+  readOnly         User[]  @relation("ReadOnlyDocumentTemplates")
+  edit             User[]  @relation("EditableDocumentTemplates")
 
   @@unique([name, worldId])
 }

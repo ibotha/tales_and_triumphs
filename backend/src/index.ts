@@ -29,7 +29,6 @@ async function startServer() {
       credentials: true,
     })
   );
-
   app.use(
     session({
       name: COOKIE_NAME,
@@ -73,6 +72,9 @@ async function startServer() {
     },
   });
 
+  app.use("/", (req, res) => {
+    res.send("hi");
+  });
   // Host App
   const port = 4000;
 

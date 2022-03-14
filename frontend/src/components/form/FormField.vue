@@ -3,6 +3,7 @@
     <div class="input-container">
       <div class="label">{{ label }}:</div>
       <div
+        v-if="type !== 'radio'"
         style="
           width: 100%;
           height: 100%;
@@ -14,9 +15,23 @@
           :placeholder="placeholder"
           v-bind:type="type"
           :value="value"
+          :name="name"
           v-on:input="input"
           v-on:change="change"
         />
+      </div>
+      <div v-else style="width: 100%; text-align: start; align-items: center">
+        <div v-for="(o, i) in options" :key="i" style="">
+          <input
+            :id="name + i"
+            :value="o"
+            :name="name"
+            type="radio"
+            v-on:input="input"
+            v-on:change="change"
+          />
+          {{ o }}
+        </div>
       </div>
     </div>
     <div class="errors">
@@ -42,10 +57,12 @@ let emit = defineEmits(["change", "input"]);
 let props = defineProps({
   placeholder: String,
   label: String,
+  name: String,
   type: String,
   value: null,
   errors: Array,
-  parentErrors: [String],
+  parentErrors: Array,
+  options: Array,
   touched: Boolean,
 });
 
@@ -70,10 +87,13 @@ let input = (e: Event) => {
 }
 
 .input-container {
-  /* display: flex;
-  flex-flow: row;
-  justify-content: flex-end;
-  padding: 0 1em 0 1em; */
+  gap: 1em;
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  justify-items: right;
+}
+
+.radio-container {
   gap: 1em;
   display: grid;
   grid-template-columns: 2fr 3fr;

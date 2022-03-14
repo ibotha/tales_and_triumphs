@@ -43,7 +43,7 @@ export const WorldRole = objectType({
         return user;
       },
     });
-    t.nonNull.int("level");
+    t.nonNull.field("level", { type: "RoleLevel" });
   },
 });
 
@@ -72,6 +72,7 @@ export const RoleLevel = enumType({
     ADMIN: roleLevels.ADMIN,
     TRUSTED: roleLevels.TRUSTED,
     USER: roleLevels.USER,
+    PUBLIC: roleLevels.PUBLIC,
   },
 });
 
@@ -137,11 +138,12 @@ export const Mutation = mutationField((t) => {
   t.field("assignWorldRole", {
     type: "AssignmentPayload",
     args: {
-      userId: nonNull(stringArg()),
+      userId: stringArg(),
+      userEmail: stringArg(),
       worldId: nonNull(stringArg()),
-      level: intArg(),
+      level: arg({ type: "RoleLevel" }),
     },
-    async resolve(parent, { userId, worldId, level }, context) {
+    async resolve(parent, { userEmail, userId, worldId, level }, context) {
       if (
         !(await userHasWorldRole(
           worldId,
@@ -151,12 +153,33 @@ export const Mutation = mutationField((t) => {
       ) {
         return { errors: ["You do not have the right permissions!"] };
       }
+      if (!userId && !userEmail)
+        return { errors: ["You must provide either a username or email"] };
 
-      if (!level) {
-        context.prisma.worldRole.delete({
+      if (userEmail) {
+        let user = await context.prisma.user.findUnique({
+          where: { email: userEmail },
+        });
+        if (!user)
+          return {
+            fieldErrors: [
+              { field: "email", message: "Could not find that email" },
+            ],
+          };
+        userId = user.id;
+      }
+
+      if (!userId) return { errors: ["No valid userId"] };
+
+      if (level === null || level === undefined) {
+        console.log("Deleting");
+        let u = await context.prisma.worldRole.delete({
           where: { userId_worldId: { userId, worldId } },
         });
-        return { data: null };
+        if (!u) {
+          return { data: null };
+        }
+        return { data: u };
       }
 
       return {

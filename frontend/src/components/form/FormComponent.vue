@@ -1,41 +1,37 @@
 <template>
-  <form>
-    <slot></slot>
-    <hr />
-    <div class="fields">
-      <FormField
-        v-for="(field, name) in fields"
-        :key="name"
-        :label="field.label"
-        :placeholder="field.placeholder"
-        :type="field.type"
-        :value="fieldData[name]"
-        v-on:input="(e) => {validate(name as string); fieldData[name] = e.target.value}"
-        v-on:change="setTouched(name as string)"
-        :touched="fieldTouched[name]"
-        :errors="fieldErrors[name]"
-        :parent-errors="parentErrors[name]"
-      />
-    </div>
-    <input
-      class="btn"
-      v-bind:disabled="hasErrors"
-      @click="
-        async () => {
-          await validate(undefined);
-          if (!hasErrors) {
-            $emit('submitted', fieldData);
-            reset();
-          } else {
-            exposeErrors();
-          }
+  <div class="form-container">
+    <form
+      v-on:keyup="
+        (e) => {
+          if (e.key == 'Enter') submit();
         }
       "
-      type="button"
-      value="Submit"
-    />
-  </form>
-  <slot name="after"></slot>
+    >
+      <slot></slot>
+      <hr />
+      <div class="fields">
+        <FormField
+          v-for="(field, name) in fields"
+          :key="name"
+          :name="(name as string)"
+          :label="field.label"
+          :placeholder="field.placeholder"
+          :type="field.type"
+          :value="fieldData[name]"
+          v-on:input="(e) => {validate(name as string); fieldData[name] = e.target.value}"
+          v-on:change="(e) => {setTouched(name as string); validate(name as string);}"
+          :touched="fieldTouched[name]"
+          :errors="fieldErrors[name]"
+          :parent-errors="parentErrors ? parentErrors[name] : []"
+          :options="field.options"
+        />
+        <div class="btn" v-bind:disabled="hasErrors" @click="submit">
+          Submit
+        </div>
+      </div>
+      <slot name="after"></slot>
+    </form>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -45,14 +41,15 @@ import FormField from "./FormField.vue";
 
 type tFields = {
   [key: string]: {
-    type: "button" | "textarea" | "checkbox" | undefined;
+    type: "button" | "textarea" | "checkbox" | "radio" | undefined;
     initialValue?: string | boolean;
     label?: string;
     placeholder?: string;
+    options?: string[];
   };
 };
 
-defineEmits(["submitted"]);
+const emit = defineEmits(["submitted"]);
 const props = defineProps({
   fields: Object,
   title: String,
@@ -76,6 +73,16 @@ for (var fieldName in fields) {
 function setTouched(f: string) {
   fieldTouched.value[f] = true;
 }
+
+let submit = async () => {
+  await validate(undefined);
+  if (!hasErrors.value) {
+    emit("submitted", fieldData.value);
+    reset();
+  } else {
+    exposeErrors();
+  }
+};
 
 function reset() {
   fieldErrors.value = {};
@@ -135,14 +142,19 @@ async function validate(field: string | undefined) {
 }
 
 .fields {
-  margin-top: 1em;
+  padding: 1em 2em;
+}
+
+.form-container {
+  margin: auto;
+  max-width: 60ch;
+  width: 100%;
+  text-align: center;
 }
 
 form {
-  padding: 1em 0.5em;
+  padding: 1em;
   background-color: var(--color-background-mute);
-  max-width: 60ch;
-  margin: 1em;
-  padding: 2em;
+  width: calc(100%);
 }
 </style>

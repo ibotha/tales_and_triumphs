@@ -5,8 +5,12 @@
   --vt-c-white-mute: #f2f2f2;
 
   --vt-c-red: #147568;
-  --vt-c-red-soft: #2f6b5c;
-  --vt-c-red-mute: #289687;
+  --vt-c-red-soft: #289687;
+  --vt-c-red-mute: #095e52;
+
+  /* --vt-c-red: #bda461;
+  --vt-c-red-soft: #91825b;
+  --vt-c-red-mute: #9b8752; */
 
   --vt-c-black: #181818;
   --vt-c-black-soft: #222222;
@@ -34,7 +38,8 @@
   --color-secondary: var(--vt-c-red);
   --color-secondary-soft: var(--vt-c-red-soft);
   --color-secondary-mute: var(--vt-c-red-mute);
-  --color-secondary-text: var(--vt-c-text-dark-1);
+  --color-secondary-text-1: var(--vt-c-text-dark-1);
+  --color-secondary-text-2: var(--vt-c-text-dark-2);
 
   --color-border: var(--vt-c-divider-light-2);
   --color-border-hover: var(--vt-c-divider-light-1);
@@ -45,7 +50,7 @@
   --section-gap: 160px;
 }
 
-/* @media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   :root {
     --color-background: var(--vt-c-black);
     --color-background-soft: var(--vt-c-black-soft);
@@ -54,7 +59,8 @@
     --color-secondary: var(--vt-c-red);
     --color-secondary-soft: var(--vt-c-red-soft);
     --color-secondary-mute: var(--vt-c-red-mute);
-    --color-secondary-text: var(--vt-c-text-dark-1);
+    --color-secondary-text-1: var(--vt-c-text-dark-1);
+    --color-secondary-text-2: var(--vt-c-text-dark-2);
 
     --color-border: var(--vt-c-divider-dark-2);
     --color-border-hover: var(--vt-c-divider-dark-1);
@@ -62,7 +68,7 @@
     --color-heading: var(--vt-c-text-dark-1);
     --color-text: var(--vt-c-text-dark-2);
   }
-} */
+}
 
 *,
 *::before,
@@ -98,16 +104,29 @@ input {
 
 hr {
   border: 1px solid var(--color-border);
-  background: none;
-  margin: 2em;
+  background: var(--color-border);
 }
 
 a {
   text-decoration: none;
+  color: inherit;
+}
+
+.flex {
+  display: flex;
 }
 
 .btn {
   background: var(--color-secondary);
+  color: var(--color-secondary-text-1);
+  border-radius: 0.25em;
+  padding: 0.25em 1em;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--color-secondary);
+  background: var(--color-secondary-mute);
   color: var(--color-secondary-text);
   border-radius: 0.25em;
   padding: 0.25em 1em;
@@ -119,12 +138,17 @@ a {
   margin: 1em;
 }
 
-.router-link-active {
-  background-color: var(--color-secondary-mute);
+.muted {
+  color: var(--color-text);
 }
 
-.btn + .btn {
-  margin-left: 1em;
+.router-link-active {
+  color: var(--color-heading);
+}
+
+.btn.router-link-active {
+  background-color: var(--color-secondary-soft);
+  color: var(--color-secondary-text-1);
 }
 
 /* width */
