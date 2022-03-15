@@ -6,17 +6,30 @@ import {
   stringArg,
 } from "nexus";
 import {
+  getUserAccessLevelOnDocument,
   roleLevels,
   userCanAccessDocument,
   userHasWorldRole,
 } from "../Auth/worldAuth";
+import { generateErrorType } from "./Errors";
+
+export const DocumentWrapper = generateErrorType({
+  name: "DocumentWrapper",
+  wrappedType: "Document",
+});
 
 export const Document = objectType({
   name: "Document",
   definition(t) {
     t.nonNull.id("id");
     t.nonNull.string("name");
-    t.int("accessLevel");
+    t.nonNull.boolean("editable", {
+      resolve: async (parent, _, context) => {
+        return (
+          (await getUserAccessLevelOnDocument(parent.id, context)) === "WRITE"
+        );
+      },
+    });
     t.nonNull.string("content");
     t.field("category", {
       type: "DocumentCategory",
@@ -63,10 +76,10 @@ export const Document = objectType({
 
 export const documentMutation = mutationField((t) => {
   t.field("createDocument", {
-    type: "Document",
+    type: "DocumentWrapper",
     args: {
       name: nonNull(stringArg()),
-      content: nonNull(stringArg()),
+      content: stringArg(),
       parentFolderId: stringArg(),
       categoryId: stringArg(),
       worldId: nonNull(stringArg()),
@@ -86,21 +99,23 @@ export const documentMutation = mutationField((t) => {
           userId_worldId: { userId: context.req.session.user!.id, worldId },
         },
       });
-      return context.prisma.document.create({
-        data: {
-          name,
-          content,
-          parentFolderId: parentFolderId || undefined,
-          categoryId: categoryId || undefined,
-          worldId,
-          creatorId: role?.userId,
-          edit: {
-            connect: {
-              id: role?.userId,
+      return {
+        data: await context.prisma.document.create({
+          data: {
+            name,
+            content: content || undefined,
+            parentFolderId: parentFolderId || undefined,
+            categoryId: categoryId || undefined,
+            worldId,
+            creatorId: role?.userId,
+            edit: {
+              connect: {
+                id: role?.userId,
+              },
             },
           },
-        },
-      });
+        }),
+      };
     },
   });
 

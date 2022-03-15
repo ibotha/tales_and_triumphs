@@ -7,7 +7,11 @@ import {
   queryField,
   stringArg,
 } from "nexus";
-import { roleLevels, userHasWorldRole } from "../Auth/worldAuth";
+import {
+  getUserWorldRole,
+  roleLevels,
+  userHasWorldRole,
+} from "../Auth/worldAuth";
 import { generateErrorType } from "./Errors";
 
 export const WorldWrapper = generateErrorType({
@@ -21,6 +25,12 @@ export const World = objectType({
     t.nonNull.id("id");
     t.nonNull.id("creatorId");
     t.nonNull.string("name");
+    t.field("myRole", {
+      type: "RoleLevel",
+      resolve: (parent, _, context) => {
+        return getUserWorldRole(parent.id, context);
+      },
+    });
     t.nonNull.field("creator", {
       type: "User",
       async resolve(parent, args, { prisma }) {

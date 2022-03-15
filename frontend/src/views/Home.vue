@@ -27,13 +27,16 @@ const { fetching, data, error } = useQuery({
         <TitleComponent style="margin-top: 1em" text="Home"
           >Welcome {{ data.me?.username }}
         </TitleComponent>
-        <LogoutButton class="btn" />
       </div>
     </template>
     <template v-slot:dropdown>
-      <router-link to="/home/worlds" class="muted"
-        ><div>Worlds</div></router-link
-      >
+      <div style="display: grid; gap: 0.5em; margin-top: 1em">
+        <LogoutButton class="large-link" />
+
+        <router-link class="large-link" :to="`/home/worlds`"
+          ><div class="auto-contrast">Worlds</div></router-link
+        >
+      </div>
     </template>
     <RouterView />
   </SideHeader>

@@ -4,28 +4,35 @@
       :fields="formFields"
       v-on:submitted="submit"
       :parent-errors="parentErrors"
-      ><TitleComponent text="Create World"> </TitleComponent>
-      <template v-slot:after
-        ><router-link class="btn" to="/home">Back</router-link></template
-      ></FormComponent
     >
+      <TitleComponent text="Create Document"> </TitleComponent>
+    </FormComponent>
   </div>
 </template>
 
 <script setup lang="ts">
 import { gql, useMutation } from "@urql/vue";
 import { ref, type Ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import FormComponent from "../components/form/FormComponent.vue";
-import TitleComponent from "../components/structure/TitleComponent.vue";
+import FormComponent from "@/components/form/FormComponent.vue";
+import TitleComponent from "@/components/structure/TitleComponent.vue";
+import { useRoute } from "vue-router";
 
 let parentErrors: Ref<{ [key: string]: string }> = ref({});
 
+const emit = defineEmits(["success"]);
+
 const route = useRoute();
-const router = useRouter();
-const assignRole = useMutation(gql`
-  mutation CreateWorld($name: String!) {
-    createWorld(name: $name) {
+const createDocument = useMutation(gql`
+  mutation CreateDocument(
+    $name: String!
+    $parentFolderId: String!
+    $worldId: String!
+  ) {
+    createDocument(
+      name: $name
+      parentFolderId: $parentFolderId
+      worldId: $worldId
+    ) {
       data {
         id
         name
@@ -42,20 +49,22 @@ const assignRole = useMutation(gql`
 const formFields = {
   name: {
     label: "Name",
-    placeholder: "Australia",
+    placeholder: "Jensin",
     initialValue: "",
   },
 };
 
 const submit = (s: any) => {
-  assignRole
+  createDocument
     .executeMutation({
       name: s.name,
+      parentFolderId: route.params.folderId,
+      worldId: route.params.worldId,
     })
     .then((e) => {
       console.log(e);
-      if (!e.data.createWorld.data) return;
-      router.push("/world/" + e.data.createWorld.data.id);
+      if (!e.data.createDocument.data) return;
+      emit("success");
     })
     .catch((err) => console.log(err));
 };

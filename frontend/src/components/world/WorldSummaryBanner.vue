@@ -1,8 +1,8 @@
 <template>
   <div v-if="fetching">Loading...</div>
   <div v-else-if="error">Oof</div>
-  <div v-else>
-    <router-link :to="'/world/' + uuid"> {{ data.world.name }} </router-link>
+  <div @click="$router.push('/world/' + uuid)" v-else class="summary-banner">
+    <h3>{{ data.world.name }}</h3>
   </div>
 </template>
 
@@ -25,4 +25,12 @@ const { fetching, data, error } = useQuery({
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.summary-banner {
+  width: 100%;
+  box-shadow: -2px 2px var(--color-background-mute);
+  background-color: var(--color-background-soft);
+  cursor: pointer;
+  padding: 2em;
+}
+</style>

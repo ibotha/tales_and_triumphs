@@ -92,7 +92,7 @@ model Document {
   updatedAt      DateTime          @updatedAt
   mentions       Document[]        @relation("linkedDocuments")
   mentionedIn    Document[]        @relation("linkedDocuments")
-  content        String
+  content        String            @default("")
   name           String            @default("document")
   category       DocumentCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   categoryId     String?

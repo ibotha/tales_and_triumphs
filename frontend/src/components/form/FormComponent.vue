@@ -41,7 +41,7 @@ import FormField from "./FormField.vue";
 
 type tFields = {
   [key: string]: {
-    type: "button" | "textarea" | "checkbox" | "radio" | undefined;
+    type: "button" | "textarea" | "checkbox" | "radio" | "colour" | undefined;
     initialValue?: string | boolean;
     label?: string;
     placeholder?: string;

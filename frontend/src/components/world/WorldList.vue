@@ -1,7 +1,11 @@
 <template>
   <div v-if="fetching">Loading...</div>
   <div v-else-if="error">Oof</div>
-  <div v-else>
+  <div
+    v-else
+    class="banner-list"
+    style="display: grid; gap: 0.5em; margin-top: 1em"
+  >
     <WorldSummaryBanner
       v-for="world in data.myWorlds"
       :key="world.id"
@@ -25,4 +29,11 @@ const { fetching, data, error } = useQuery({
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.banner-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin: 1em 0;
+}
+</style>

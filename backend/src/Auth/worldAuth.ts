@@ -16,9 +16,11 @@ export const getUserWorldRole = async (
 ): Promise<roleLevels> => {
   if (!context.req.session.user) return roleLevels.PUBLIC;
   let userId = context.req.session.user.id;
+  console.log(`Checking user: ${userId}`);
   let role = await context.prisma.worldRole.findUnique({
     where: { userId_worldId: { worldId, userId } },
   });
+  console.log(`Got role: ${role}`);
   if (!role) return roleLevels.PUBLIC;
   return role.level;
 };
@@ -28,7 +30,9 @@ export const userHasWorldRole = async (
   level: number,
   context: Context
 ): Promise<boolean> => {
-  return (await getUserWorldRole(worldId, context)) <= level;
+  let userLevel = await getUserWorldRole(worldId, context);
+  console.log(`UserLevel: ${userLevel} <= ${level}`);
+  return userLevel <= level;
 };
 
 type ObjectAccessLevel = "READ" | "WRITE" | "NONE";

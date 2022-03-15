@@ -31,7 +31,7 @@ let showDropdown = ref(false);
   display: grid;
   grid-template-columns: 1fr 1px var(--right-fraction);
   gap: 1em;
-  height: 100vh;
+  height: 99.9vh;
   grid-template-rows: minmax(0, 1fr);
   padding: 1em;
 
@@ -50,7 +50,7 @@ main {
   flex-flow: column;
   justify-content: space-around;
   overflow-y: auto;
-  padding: 1em 2em;
+  padding: 1em;
 
   @media (max-width: 800px) {
     height: auto;

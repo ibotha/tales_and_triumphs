@@ -33,6 +33,26 @@ const client = new Client({
           assignWorldRole(result, args, cache) {
             cache.invalidate("Query", "world", { id: args.worldId });
           },
+          createFolder(result, args, cache) {
+            cache.invalidate("Query", "folder", { id: args.parentFolderId });
+          },
+          createDocument(result, args, cache) {
+            cache.invalidate("Query", "folder", { id: args.parentFolderId });
+          },
+          createWorld(result, args, cache) {
+            console.log(result);
+            cache.invalidate("Query", "myWorlds");
+          },
+          deleteWorld(result, args, cache) {
+            console.log(result);
+            cache.invalidate("Query", "myWorlds");
+          },
+          deleteFolder(result: any, args, cache) {
+            console.log(result.deleteFolder.parentFolder.id);
+            cache.invalidate("Query", "folder", {
+              id: result.deleteFolder.parentFolder.id,
+            });
+          },
         },
       },
     }),

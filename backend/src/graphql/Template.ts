@@ -6,6 +6,7 @@ import {
   stringArg,
 } from "nexus";
 import {
+  getUserAccessLevelOnDocumentTemplate,
   roleLevels,
   userCanAccessDocumentTemplate,
   userHasWorldRole,
@@ -17,6 +18,14 @@ export const DocumentTemplate = objectType({
     t.nonNull.id("id");
     t.nonNull.string("name");
     t.nonNull.string("content");
+    t.nonNull.boolean("editable", {
+      resolve: async (parent, _, context) => {
+        return (
+          (await getUserAccessLevelOnDocumentTemplate(parent.id, context)) ===
+          "WRITE"
+        );
+      },
+    });
   },
 });
 
@@ -43,7 +52,6 @@ export const documentTemplateMutation = mutationField((t) => {
         data: {
           name,
           content,
-          accessLevel: 0,
           worldId,
           creatorId: role?.userId,
           edit: {

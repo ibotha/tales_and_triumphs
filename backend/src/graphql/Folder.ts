@@ -6,6 +6,7 @@ import {
   stringArg,
 } from "nexus";
 import {
+  getUserAccessLevelOnFolder,
   roleLevels,
   userCanAccessFolder,
   userHasWorldRole,
@@ -23,6 +24,13 @@ export const Folder = objectType({
     t.nonNull.id("id");
     t.nonNull.string("name");
     t.nonNull.string("colour");
+    t.nonNull.boolean("editable", {
+      resolve: async (parent, _, context) => {
+        return (
+          (await getUserAccessLevelOnFolder(parent.id, context)) === "WRITE"
+        );
+      },
+    });
     t.string("worldId");
     t.nonNull.field("world", {
       type: "World",
@@ -62,12 +70,14 @@ export const Folder = objectType({
         return res;
       },
     });
+    t.string("parentFolderId");
     t.field("parentFolder", {
       type: "Folder",
       resolve: (parent, _, context) => {
-        return context.prisma.folder
-          .findUnique({ where: { id: parent.id } })
-          .parentFolder();
+        if (!parent.parentFolderId) return null;
+        return context.prisma.folder.findUnique({
+          where: { id: parent.parentFolderId },
+        });
       },
     });
     t.nonNull.list.nonNull.field("subfolders", {
@@ -172,17 +182,24 @@ export const folderMutation = mutationField((t) => {
   });
 
   t.field("deleteFolder", {
-    type: "Boolean",
+    type: "Folder",
     args: {
       id: nonNull(stringArg()),
     },
     resolve: async (parent, { id }, context) => {
       let authRes = await userCanAccessFolder(id, "WRITE", context);
       if (authRes !== true) return null;
-      let ret = await context.prisma.folder.delete({
+      let folder = await context.prisma.folder.findUnique({
         where: { id },
       });
-      return !!ret;
+      console.log(folder);
+      if (folder?.parentFolderId !== null) {
+        let ret = await context.prisma.folder.delete({
+          where: { id },
+        });
+        return ret;
+      }
+      return folder;
     },
   });
 });

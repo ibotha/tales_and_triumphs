@@ -1,8 +1,8 @@
 /* color palette from <https://github.com/vuejs/theme> */
 :root {
   --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
+  --vt-c-white-soft: hsl(0, 0%, 90%);
+  --vt-c-white-mute: hsl(0, 0%, 86%);
 
   --vt-c-red: #147568;
   --vt-c-red-soft: #289687;
@@ -94,6 +94,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.auto-contrast {
+  background: inherit;
+  background-color: inherit;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  filter: invert(1);
+  filter: invert(1) grayscale(1) contrast(7);
+}
+
 input {
   border: none;
   border-bottom: 2px solid var(--color-border);
@@ -124,10 +134,18 @@ a {
   cursor: pointer;
 }
 
+.vacp-color-picker {
+  background-color: transparent !important;
+}
+
+.vacp-color-input {
+  background-color: var(--color-background) !important;
+}
+
 .btn:hover {
   background: var(--color-secondary);
   background: var(--color-secondary-mute);
-  color: var(--color-secondary-text);
+  color: var(--color-secondary-text-1);
   border-radius: 0.25em;
   padding: 0.25em 1em;
 }
@@ -149,6 +167,21 @@ a {
 .btn.router-link-active {
   background-color: var(--color-secondary-soft);
   color: var(--color-secondary-text-1);
+}
+
+.large-link {
+  background-color: var(--color-secondary);
+  color: var(--color-text-light-1);
+  padding: 0.5em;
+  cursor: pointer;
+}
+
+.hover-bubble {
+  transition: transform 0.25s;
+}
+
+.hover-bubble:hover {
+  transform: scale(1.1);
 }
 
 /* width */
