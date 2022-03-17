@@ -27,7 +27,16 @@
         Delete
       </div>
     </div>
-    <h2 v-if="data.folder.parentFolder">{{ data.folder.name }}</h2>
+    <h2
+      v-if="data.folder.parentFolder"
+      style="
+        background-color: var(--color-background-mute);
+        margin: 0.5em 0 0 0;
+        box-shadow: 2px 1px 5px rgb(0.3, 0.3, 0.3, 0.2);
+      "
+    >
+      {{ data.folder.name }}
+    </h2>
     <div v-if="!$route.params.folderId" style="display: none">
       oof
       {{
@@ -52,6 +61,10 @@
       >
       </DocumentIcon>
     </div>
+    <FolderPermissions
+      :folderId="folderId"
+      v-if="data.folder.parentFolder"
+    ></FolderPermissions>
     <ModalComponent v-if="createFolder" @close="createFolder = false"
       ><CreateFolder @success="createFolder = false"></CreateFolder
     ></ModalComponent>
@@ -64,7 +77,6 @@
     <ModalComponent v-if="createDocument" @close="createDocument = false"
       ><CreateDocument @success="createDocument = false"></CreateDocument
     ></ModalComponent>
-
     <ModalComponent v-if="deleteFolderModal" @close="deleteFolderModal = false">
       <ConfirmComponent @no="deleteFolderModal = false" @yes="deleteFolder">
         <h2 style="max-width: 30ch; text-align: center; margin-bottom: 1em">
@@ -72,15 +84,12 @@
         </h2>
       </ConfirmComponent>
     </ModalComponent>
-    <div style="display: none">
-      {{ (folderId = $route.params.folderId as string) }}
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useQuery, gql, useMutation } from "@urql/vue";
-import { ref, type Ref } from "vue";
+import { computed, ref, type Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import FolderIcon from "../../components/noteExplorer/FolderIcon.vue";
 import DocumentIcon from "../../components/noteExplorer/DocumentIcon.vue";
@@ -89,23 +98,37 @@ import CreateFolder from "../../components/noteExplorer/CreateFolder.vue";
 import CreateDocument from "../../components/noteExplorer/CreateDocument.vue";
 import UpdateFolder from "../../components/noteExplorer/UpdateFolder.vue";
 import ConfirmComponent from "../../components/structure/ConfirmComponent.vue";
+import FolderPermissions from "../../components/noteExplorer/FolderPermissions.vue";
 
 const route = useRoute();
 const router = useRouter();
-let folderId: Ref<string> = ref(route.params.folderId as string);
-let worldId: Ref<string> = ref(route.params.worldId as string);
+
+let folderId = computed(() => {
+  return route.params.folderId;
+});
+let worldId = computed(() => {
+  return !folderId.value ? route.params.worldId : undefined;
+});
 let createFolder = ref(false);
 let createDocument = ref(false);
 let deleteFolderModal = ref(false);
 let updateFolder: Ref<any> = ref(null);
 
-const { fetching, data, error } = useQuery({
+const { fetching, data, error, executeQuery } = useQuery({
   query: gql`
     query Folder($id: String, $worldId: String) {
       folder(id: $id, worldId: $worldId) {
         id
         name
         colour
+        editors {
+          id
+        }
+        readers {
+          id
+        }
+        readAccessLevel
+        writeAccessLevel
         parentFolder {
           id
         }
@@ -122,7 +145,7 @@ const { fetching, data, error } = useQuery({
     }
   `,
   variables: {
-    worldId: !folderId.value ? worldId : undefined,
+    worldId: worldId,
     id: folderId,
   },
 });
@@ -137,6 +160,14 @@ const deleteFolderMutation = useMutation(gql`
     }
   }
 `);
+
+const goBack = () => {
+  router.push(`/world/${route.params.worldId}/folder`);
+  executeQuery({
+    worldId: !route.params.folderId ? route.params.worldId : undefined,
+    id: route.params.folderId,
+  });
+};
 
 let deleteFolder = () => {
   deleteFolderMutation
@@ -158,9 +189,9 @@ let updateClicked = (i: number) => {
 <style scoped>
 .explorer {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 10em);
-  grid-auto-rows: 10em;
-  justify-content: center;
-  gap: 1em;
+  grid-template-columns: repeat(auto-fit, 9em);
+  grid-auto-rows: 9em;
+  gap: 0.5em;
+  margin-bottom: 1em;
 }
 </style>

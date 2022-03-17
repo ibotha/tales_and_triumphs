@@ -129,7 +129,6 @@ a {
 .btn {
   background: var(--color-secondary);
   color: var(--color-secondary-text-1);
-  border-radius: 0.25em;
   padding: 0.25em 1em;
   cursor: pointer;
 }
@@ -143,10 +142,8 @@ a {
 }
 
 .btn:hover {
-  background: var(--color-secondary);
-  background: var(--color-secondary-mute);
+  filter: brightness(0.8);
   color: var(--color-secondary-text-1);
-  border-radius: 0.25em;
   padding: 0.25em 1em;
 }
 
@@ -174,6 +171,9 @@ a {
   color: var(--color-text-light-1);
   padding: 0.5em;
   cursor: pointer;
+}
+.large-link:hover {
+  filter: brightness(0.8);
 }
 
 .hover-bubble {

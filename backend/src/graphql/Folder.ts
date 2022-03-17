@@ -4,6 +4,8 @@ import {
   objectType,
   queryField,
   stringArg,
+  list,
+  arg,
 } from "nexus";
 import {
   getUserAccessLevelOnFolder,
@@ -24,6 +26,24 @@ export const Folder = objectType({
     t.nonNull.id("id");
     t.nonNull.string("name");
     t.nonNull.string("colour");
+    t.nonNull.list.nonNull.field("editors", {
+      type: "User",
+      resolve: async (parent, _, context) => {
+        return context.prisma.folder
+          .findUnique({ where: { id: parent.id } })
+          .edit();
+      },
+    });
+    t.nonNull.list.nonNull.field("readers", {
+      type: "User",
+      resolve: async (parent, _, context) => {
+        return context.prisma.folder
+          .findUnique({ where: { id: parent.id } })
+          .readOnly();
+      },
+    });
+    t.nonNull.field("readAccessLevel", { type: "RoleLevel" });
+    t.nonNull.field("writeAccessLevel", { type: "RoleLevel" });
     t.nonNull.boolean("editable", {
       resolve: async (parent, _, context) => {
         return (
@@ -130,9 +150,7 @@ export const folderMutation = mutationField((t) => {
       worldId: nonNull(stringArg()),
     },
     async resolve(parent, { name, colour, worldId, parentFolderId }, context) {
-      if (
-        !(await userHasWorldRole(worldId, Math.min(roleLevels.USER), context))
-      ) {
+      if (!(await userCanAccessFolder(parentFolderId, "WRITE", context))) {
         throw Error("You do not have the right permissions!");
       }
       let role = await context.prisma.worldRole.findUnique({
@@ -165,16 +183,88 @@ export const folderMutation = mutationField((t) => {
       colour: stringArg(),
       parentFolderId: stringArg(),
       name: stringArg(),
+      revokeUsers: list(nonNull(stringArg())),
+      newReadOnlyUsers: list(nonNull(stringArg())),
+      newEditorUsers: list(nonNull(stringArg())),
+      readAccessLevel: arg({ type: "RoleLevel" }),
+      writeAccessLevel: arg({ type: "RoleLevel" }),
     },
-    resolve: async (parent, { id, colour, name, parentFolderId }, context) => {
+    resolve: async (
+      parent,
+      {
+        id,
+        colour,
+        name,
+        parentFolderId,
+        revokeUsers,
+        newEditorUsers,
+        newReadOnlyUsers,
+        readAccessLevel,
+        writeAccessLevel,
+      },
+      context
+    ) => {
       let authRes = await userCanAccessFolder(id, "WRITE", context);
       if (authRes !== true) return null;
+      let folder = await context.prisma.folder.findUnique({ where: { id } });
+      if (!folder?.parentFolderId) return null;
+
+      let editRevokeList: { id: string }[] = [];
+      let editConnectList: { id: string }[] = [];
+      let readOnlyRevokeList: { id: string }[] = [];
+      let readOnlyConnectList: { id: string }[] = [];
+
+      if (revokeUsers) {
+        console.log("RevokeUsers: ", revokeUsers);
+        editRevokeList = editRevokeList.concat(
+          revokeUsers.map((e) => ({ id: e }))
+        );
+        readOnlyRevokeList = readOnlyRevokeList.concat(
+          revokeUsers.map((e) => ({ id: e }))
+        );
+      }
+
+      if (newEditorUsers) {
+        editConnectList = editConnectList.concat(
+          newEditorUsers.map((e) => ({ id: e }))
+        );
+        readOnlyRevokeList = readOnlyRevokeList.concat(
+          newEditorUsers.map((e) => ({ id: e }))
+        );
+      }
+
+      if (newReadOnlyUsers) {
+        editRevokeList = editRevokeList.concat(
+          newReadOnlyUsers.map((e) => ({ id: e }))
+        );
+        readOnlyConnectList = readOnlyConnectList.concat(
+          newReadOnlyUsers.map((e) => ({ id: e }))
+        );
+      }
+      console.log("editRevokeList: ", editRevokeList);
+      console.log("editConnectList: ", editConnectList);
+      console.log("readOnlyRevokeList: ", readOnlyRevokeList);
+      console.log("readOnlyConnectList: ", readOnlyConnectList);
+
       let ret = await context.prisma.folder.update({
         where: { id },
         data: {
           colour: colour || undefined,
           name: name || undefined,
           parentFolderId: parentFolderId || undefined,
+          readAccessLevel:
+            readAccessLevel === null || readAccessLevel === undefined
+              ? undefined
+              : readAccessLevel,
+          writeAccessLevel:
+            writeAccessLevel === null || writeAccessLevel === undefined
+              ? undefined
+              : writeAccessLevel,
+          edit: { disconnect: editRevokeList, connect: editConnectList },
+          readOnly: {
+            disconnect: readOnlyRevokeList,
+            connect: readOnlyConnectList,
+          },
         },
       });
       return ret;
@@ -193,13 +283,12 @@ export const folderMutation = mutationField((t) => {
         where: { id },
       });
       console.log(folder);
-      if (folder?.parentFolderId !== null) {
-        let ret = await context.prisma.folder.delete({
-          where: { id },
-        });
-        return ret;
-      }
-      return folder;
+      if (folder?.parentFolderId === null) return null;
+
+      let ret = await context.prisma.folder.delete({
+        where: { id },
+      });
+      return ret;
     },
   });
 });

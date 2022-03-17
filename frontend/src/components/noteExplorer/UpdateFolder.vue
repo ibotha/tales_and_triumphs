@@ -56,8 +56,8 @@ const submit = (s: any) => {
       colour: s.colour,
     })
     .then((e) => {
-      console.log(e);
-      if (!e.data.updateFolder.data) return;
+      if (!e.data.updateFolder) return;
+      console.log("asd", e.data.updateFolder);
       emit("success");
     })
     .catch((err) => console.log(err));

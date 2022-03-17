@@ -20,7 +20,13 @@ const { fetching, data, error } = useQuery({
 </script>
 
 <template>
-  <div v-on:click="logoutMutation.executeMutation({})">
+  <div
+    v-on:click="
+      logoutMutation.executeMutation({}).then(() => {
+        $router.push('/');
+      })
+    "
+  >
     <div class="auto-contrast">
       <slot
         ><span style="font-weight: bold; color: black">{{
