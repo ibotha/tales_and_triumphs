@@ -63,6 +63,7 @@
     </div>
     <FolderPermissions
       :folderId="folderId"
+      :worldId="$route.params.worldId as string"
       v-if="data.folder.parentFolder"
     ></FolderPermissions>
     <ModalComponent v-if="createFolder" @close="createFolder = false"
@@ -104,7 +105,7 @@ const route = useRoute();
 const router = useRouter();
 
 let folderId = computed(() => {
-  return route.params.folderId;
+  return route.params.folderId as string;
 });
 let worldId = computed(() => {
   return !folderId.value ? route.params.worldId : undefined;
@@ -116,15 +117,15 @@ let updateFolder: Ref<any> = ref(null);
 
 const { fetching, data, error, executeQuery } = useQuery({
   query: gql`
-    query Folder($id: String, $worldId: String) {
-      folder(id: $id, worldId: $worldId) {
+    query Folder($id: String) {
+      folder(id: $id) {
         id
         name
         colour
-        editors {
+        edit {
           id
         }
-        readers {
+        readOnly {
           id
         }
         readAccessLevel
@@ -145,7 +146,6 @@ const { fetching, data, error, executeQuery } = useQuery({
     }
   `,
   variables: {
-    worldId: worldId,
     id: folderId,
   },
 });
@@ -164,20 +164,18 @@ const deleteFolderMutation = useMutation(gql`
 const goBack = () => {
   router.push(`/world/${route.params.worldId}/folder`);
   executeQuery({
-    worldId: !route.params.folderId ? route.params.worldId : undefined,
-    id: route.params.folderId,
+    worldId: worldId.value,
+    id: folderId.value,
   });
 };
 
 let deleteFolder = () => {
-  deleteFolderMutation
-    .executeMutation({ id: route.params.folderId })
-    .then((e) => {
-      if (e.data.deleteFolder) {
-        router.push(`${data.value.folder.parentFolder.id}`);
-        deleteFolderModal.value = false;
-      }
-    });
+  deleteFolderMutation.executeMutation({ id: folderId.value }).then((e) => {
+    if (e.data.deleteFolder) {
+      router.push(`${data.value.folder.parentFolder.id}`);
+      deleteFolderModal.value = false;
+    }
+  });
 };
 
 let updateClicked = (i: number) => {

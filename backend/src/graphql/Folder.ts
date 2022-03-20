@@ -1,3 +1,5 @@
+import { PrismaSelect } from "@paljs/plugins";
+import { Prisma } from "@prisma/client";
 import {
   mutationField,
   nonNull,
@@ -13,6 +15,7 @@ import {
   userCanAccessFolder,
   userHasWorldRole,
 } from "../Auth/worldAuth";
+import { generateSelect } from "../Util/select";
 import { generateErrorType } from "./Errors";
 
 export const FolderWrapper = generateErrorType({
@@ -20,52 +23,35 @@ export const FolderWrapper = generateErrorType({
   wrappedType: "Folder",
 });
 
+/* -------------------------------------
+Object Declaration
+------------------------------------- */
 export const Folder = objectType({
   name: "Folder",
   definition(t) {
     t.nonNull.id("id");
     t.nonNull.string("name");
     t.nonNull.string("colour");
-    t.nonNull.list.nonNull.field("editors", {
-      type: "User",
-      resolve: async (parent, _, context) => {
-        return context.prisma.folder
-          .findUnique({ where: { id: parent.id } })
-          .edit();
-      },
-    });
-    t.nonNull.list.nonNull.field("readers", {
-      type: "User",
-      resolve: async (parent, _, context) => {
-        return context.prisma.folder
-          .findUnique({ where: { id: parent.id } })
-          .readOnly();
-      },
-    });
+    t.nonNull.list.nonNull.field("edit", { type: "User" });
+    t.nonNull.list.nonNull.field("readOnly", { type: "User" });
     t.nonNull.field("readAccessLevel", { type: "RoleLevel" });
     t.nonNull.field("writeAccessLevel", { type: "RoleLevel" });
     t.nonNull.boolean("editable", {
       resolve: async (parent, _, context) => {
         return (
-          (await getUserAccessLevelOnFolder(parent.id, context)) === "WRITE"
+          (await getUserAccessLevelOnFolder(parent.id!, context)) === "WRITE"
         );
       },
     });
     t.string("worldId");
-    t.nonNull.field("world", {
-      type: "World",
-      async resolve(parent, _, context) {
-        let res = await context.prisma.document
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .world();
-        return res!;
-      },
-    });
+    t.nonNull.field("world", { type: "World" });
     t.nonNull.list.nonNull.field("documents", {
       type: "Document",
-      async resolve(parent, _, context) {
+      async resolve(parent, _, context, info) {
+        let select = generateSelect<Prisma.DocumentSelect>()(info, {
+          id: true,
+        });
+
         let userId = context.req.session.user?.id;
         let user = await context.prisma.user.findUnique({
           where: { id: userId },
@@ -86,6 +72,7 @@ export const Folder = objectType({
               ],
             },
           },
+          ...select,
         });
         return res;
       },
@@ -93,16 +80,11 @@ export const Folder = objectType({
     t.string("parentFolderId");
     t.field("parentFolder", {
       type: "Folder",
-      resolve: (parent, _, context) => {
-        if (!parent.parentFolderId) return null;
-        return context.prisma.folder.findUnique({
-          where: { id: parent.parentFolderId },
-        });
-      },
     });
     t.nonNull.list.nonNull.field("subfolders", {
       type: "Folder",
-      async resolve(parent, _, context) {
+      async resolve(parent, _, context, info) {
+        let select = generateSelect<Prisma.FolderSelect>()(info, { id: true });
         let userId = context.req.session.user?.id;
         let user = await context.prisma.user.findUnique({
           where: { id: userId },
@@ -123,19 +105,13 @@ export const Folder = objectType({
               ],
             },
           },
+          ...select,
         });
         return res!;
       },
     });
     t.field("creator", {
       type: "User",
-      resolve(parent, _, context) {
-        return context.prisma.document
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .creator();
-      },
     });
   },
 });
@@ -149,7 +125,12 @@ export const folderMutation = mutationField((t) => {
       parentFolderId: nonNull(stringArg()),
       worldId: nonNull(stringArg()),
     },
-    async resolve(parent, { name, colour, worldId, parentFolderId }, context) {
+    async resolve(
+      parent,
+      { name, colour, worldId, parentFolderId },
+      context,
+      info
+    ) {
       if (!(await userCanAccessFolder(parentFolderId, "WRITE", context))) {
         throw Error("You do not have the right permissions!");
       }
@@ -158,6 +139,9 @@ export const folderMutation = mutationField((t) => {
           userId_worldId: { userId: context.req.session.user!.id, worldId },
         },
       });
+      let select = new PrismaSelect(info).valueOf("data") as {
+        select: Prisma.FolderSelect;
+      };
       let folder = await context.prisma.folder.create({
         data: {
           name,
@@ -171,6 +155,7 @@ export const folderMutation = mutationField((t) => {
             },
           },
         },
+        ...select,
       });
       return { data: folder };
     },
@@ -202,10 +187,14 @@ export const folderMutation = mutationField((t) => {
         readAccessLevel,
         writeAccessLevel,
       },
-      context
+      context,
+      info
     ) => {
+      let select = generateSelect<Prisma.FolderSelect>()(info, { id: true });
+
       let authRes = await userCanAccessFolder(id, "WRITE", context);
       if (authRes !== true) return null;
+
       let folder = await context.prisma.folder.findUnique({ where: { id } });
       if (!folder?.parentFolderId) return null;
 
@@ -241,10 +230,6 @@ export const folderMutation = mutationField((t) => {
           newReadOnlyUsers.map((e) => ({ id: e }))
         );
       }
-      console.log("editRevokeList: ", editRevokeList);
-      console.log("editConnectList: ", editConnectList);
-      console.log("readOnlyRevokeList: ", readOnlyRevokeList);
-      console.log("readOnlyConnectList: ", readOnlyConnectList);
 
       let ret = await context.prisma.folder.update({
         where: { id },
@@ -266,6 +251,7 @@ export const folderMutation = mutationField((t) => {
             connect: readOnlyConnectList,
           },
         },
+        ...select,
       });
       return ret;
     },
@@ -276,17 +262,19 @@ export const folderMutation = mutationField((t) => {
     args: {
       id: nonNull(stringArg()),
     },
-    resolve: async (parent, { id }, context) => {
+    resolve: async (parent, { id }, context, info) => {
+      let select = generateSelect<Prisma.FolderSelect>()(info, { id: true });
+
       let authRes = await userCanAccessFolder(id, "WRITE", context);
       if (authRes !== true) return null;
       let folder = await context.prisma.folder.findUnique({
         where: { id },
       });
-      console.log(folder);
       if (folder?.parentFolderId === null) return null;
 
       let ret = await context.prisma.folder.delete({
         where: { id },
+        ...select,
       });
       return ret;
     },
@@ -300,16 +288,19 @@ export const folderQuery = queryField((t) => {
       id: stringArg(),
       worldId: stringArg(),
     },
-    resolve: async (parent, { id, worldId }, context) => {
+    resolve: async (parent, { id, worldId }, context, info) => {
+      let select = generateSelect<Prisma.FolderSelect>()(info, { id: true });
       if (id) {
         let authRes = await userCanAccessFolder(id, "READ", context);
         if (authRes !== true) return null;
         return context.prisma.folder.findUnique({
           where: { id },
+          ...select,
         });
       } else if (worldId) {
         let folder = await context.prisma.folder.findFirst({
           where: { parentFolderId: null, name: "root", worldId },
+          ...select,
         });
         console.log(folder);
         if (!folder) return null;
@@ -326,8 +317,9 @@ export const folderQuery = queryField((t) => {
     args: {
       worldId: nonNull(stringArg()),
     },
-    resolve(parent, { worldId }, context) {
-      return context.prisma.folder.findMany({ where: { worldId } });
+    resolve(parent, { worldId }, context, info) {
+      let select = generateSelect<Prisma.FolderSelect>()(info, { id: true });
+      return context.prisma.folder.findMany({ where: { worldId }, ...select });
     },
   });
 });

@@ -5,7 +5,7 @@ export const prisma = new PrismaClient();
 
 export interface Context {
   prisma: PrismaClient;
-  req: Request & { session: { user?: User } };
+  req: Request & { session: { user?: { id: string } } };
   res: Response;
 }
 

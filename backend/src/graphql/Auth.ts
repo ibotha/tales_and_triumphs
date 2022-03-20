@@ -2,6 +2,8 @@ import { mutationField, nonNull, objectType, stringArg } from "nexus";
 import { hash, verify } from "argon2";
 import { ValidationError } from "apollo-server-express";
 import { registerUserSchema } from "../Validation/userValidation";
+import { Prisma } from "@prisma/client";
+import { generateSelect } from "../Util/select";
 
 export const authMutation = mutationField((t) => {
   t.field("register", {
@@ -11,7 +13,12 @@ export const authMutation = mutationField((t) => {
       email: nonNull(stringArg()),
       password: nonNull(stringArg()),
     },
-    async resolve(parent, args, context) {
+    async resolve(parent, args, context, info) {
+      let select = generateSelect<Prisma.UserSelect>()(
+        info,
+        { id: true },
+        "data"
+      );
       try {
         registerUserSchema.validateSync(args, {
           abortEarly: false,
@@ -36,6 +43,7 @@ export const authMutation = mutationField((t) => {
             pwHash,
             username,
           },
+          ...select,
         });
         context.req.session.user = user;
         return { data: user };
@@ -60,9 +68,17 @@ export const authMutation = mutationField((t) => {
       email: nonNull(stringArg()),
       password: nonNull(stringArg()),
     },
-    async resolve(parent, { email, password }, context) {
+    async resolve(parent, { email, password }, context, info) {
+      let select = generateSelect<Prisma.UserSelect>()(
+        info,
+        { id: true, pwHash: true },
+        "data"
+      );
       email = email.toLowerCase();
-      let user = await context.prisma.user.findUnique({ where: { email } });
+      let user = await context.prisma.user.findUnique({
+        where: { email },
+        ...select,
+      });
       if (!user)
         return {
           fieldErrors: [

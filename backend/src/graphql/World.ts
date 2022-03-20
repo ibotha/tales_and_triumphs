@@ -1,3 +1,4 @@
+import { PrismaSelect } from "@paljs/plugins";
 import { Prisma, User } from "@prisma/client";
 import {
   idArg,
@@ -12,7 +13,10 @@ import {
   roleLevels,
   userHasWorldRole,
 } from "../Auth/worldAuth";
+import { generateSelect } from "../Util/select";
 import { generateErrorType } from "./Errors";
+
+const exclude = [];
 
 export const WorldWrapper = generateErrorType({
   name: "WorldWrapper",
@@ -23,66 +27,28 @@ export const World = objectType({
   name: "World",
   definition(t) {
     t.nonNull.id("id");
-    t.nonNull.id("creatorId");
     t.nonNull.string("name");
     t.field("myRole", {
       type: "RoleLevel",
       resolve: (parent, _, context) => {
-        return getUserWorldRole(parent.id, context);
+        return getUserWorldRole(parent.id!, context);
       },
     });
-    t.nonNull.field("creator", {
-      type: "User",
-      async resolve(parent, args, { prisma }) {
-        let user = await prisma.user.findUnique({
-          where: { id: parent.creatorId },
-        });
-        if (!user) throw Error("Could not find a valid user");
-        return user;
-      },
-    });
-    t.nonNull.list.nonNull.field("users", {
-      type: "User",
-      async resolve(parent, args, { prisma }) {
-        let roles = await prisma.world
-          .findUnique({ where: { id: parent.id } })
-          .roles({ include: { user: {} } });
-        let ret = roles.map((role) => {
-          let user: any = role.user;
-          user.role = role.level;
-          return role.user;
-        });
-        return ret;
-      },
-    });
-    t.nonNull.list.nonNull.field("categories", {
-      type: "DocumentCategory",
-      resolve: (parent, _, context) => {
-        return context.prisma.documentCategory.findMany({
-          where: { worldId: parent.id },
-        });
-      },
-    });
-    t.nonNull.list.nonNull.field("documents", {
-      type: "Document",
-      args: {
-        parentFolderId: stringArg(),
-      },
-      resolve: (parent, { parentFolderId }, context) => {
-        return context.prisma.document.findMany({
-          where: {
-            worldId: parent.id,
-          },
-        });
-      },
-    });
+    t.nonNull.field("creator", { type: "User" });
+    t.nonNull.list.nonNull.field("roles", { type: "WorldRole" });
+    t.nonNull.list.nonNull.field("categories", { type: "DocumentCategory" });
+    t.nonNull.list.nonNull.field("documents", { type: "Document" });
     t.field("rootFolder", {
       type: "Folder",
-      resolve: (parent, _, context) => {
+      resolve: (parent, _, context, info) => {
+        let select = generateSelect<Prisma.FolderSelect>()(info, {
+          id: true,
+        });
         return context.prisma.folder.findFirst({
           where: {
             AND: { worldId: parent.id, parentFolderId: null },
           },
+          ...select,
         });
       },
     });
@@ -95,7 +61,14 @@ export const worldMutation = mutationField((t) => {
     args: {
       name: nonNull(stringArg()),
     },
-    async resolve(parent, { name }, { prisma, req }) {
+    async resolve(parent, { name }, { prisma, req }, info) {
+      let select = generateSelect<Prisma.WorldSelect>()(
+        info,
+        {
+          id: true,
+        },
+        "data"
+      );
       // TODO: Move auth check into a central location.
       if (!req.session.user)
         return {
@@ -124,6 +97,7 @@ export const worldMutation = mutationField((t) => {
               },
             },
           },
+          ...select,
         });
         return { data: world };
       } catch (e: any) {
@@ -146,7 +120,10 @@ export const worldMutation = mutationField((t) => {
     async resolve(parent, { id }, context) {
       if (!(await userHasWorldRole(id, roleLevels.ADMIN, context)))
         return false;
-      await context.prisma.world.delete({ where: { id } });
+      await context.prisma.world.delete({
+        where: { id },
+        select: { id: true },
+      });
       return true;
     },
   });
@@ -159,22 +136,31 @@ export const worldQuery = queryField((t) => {
       id: nonNull(stringArg()),
     },
     resolve(parent, { id }, { prisma }, info) {
-      return prisma.world.findUnique({ where: { id } });
+      let select = generateSelect<Prisma.WorldSelect>()(info, {
+        id: true,
+      });
+      return prisma.world.findUnique({ where: { id }, ...select });
     },
   });
   t.nonNull.list.nonNull.field("worlds", {
     type: "World",
     resolve(parent, args, { prisma }, info) {
-      return prisma.world.findMany();
+      let select = generateSelect<Prisma.WorldSelect>()(info, {
+        id: true,
+      });
+      return prisma.world.findMany({ ...select });
     },
   });
   t.list.nonNull.field("myWorlds", {
     type: "World",
-    resolve(parent, args, { prisma, req }) {
-      if (!req.session.user) return null;
-
+    resolve(parent, args, { prisma, req }, info) {
+      if (!req.session.user) return [];
+      let select = generateSelect<Prisma.WorldSelect>()(info, {
+        id: true,
+      });
       return prisma.world.findMany({
         where: { roles: { some: { userId: req.session.user.id } } },
+        ...select,
       });
     },
   });

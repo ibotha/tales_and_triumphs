@@ -19,6 +19,7 @@
     "typescript": "^4.6.2"
   },
   "dependencies": {
+    "@paljs/plugins": "^4.0.18",
     "@prisma/client": "^3.10.0",
     "apollo-server-express": "^3.6.3",
     "argon2": "^0.28.5",

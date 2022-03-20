@@ -1,4 +1,4 @@
-import { User } from "@prisma/client";
+import { Prisma, User } from "@prisma/client";
 import {
   arg,
   enumType,
@@ -17,32 +17,15 @@ import {
   userCanAccessFolder,
   userHasWorldRole,
 } from "../Auth/worldAuth";
+import { generateSelect } from "../Util/select";
 import { generateErrorType } from "./Errors";
 
 export const WorldRole = objectType({
   name: "WorldRole",
   definition(t) {
     t.nonNull.id("id");
-    t.nonNull.field("user", {
-      type: "User",
-      async resolve(parent, args, { prisma }) {
-        let user = await prisma.worldRole
-          .findUnique({ where: { id: parent.id } })
-          .user();
-        if (!user) throw Error("Could not find a valid role");
-        return user;
-      },
-    });
-    t.nonNull.field("world", {
-      type: "World",
-      async resolve(parent, args, { prisma }) {
-        let user = await prisma.worldRole
-          .findUnique({ where: { id: parent.id } })
-          .world();
-        if (!user) throw Error("Could not find a valid role");
-        return user;
-      },
-    });
+    t.nonNull.field("user", { type: "User" });
+    t.nonNull.field("world", { type: "World" });
     t.nonNull.field("level", { type: "RoleLevel" });
   },
 });
@@ -143,7 +126,17 @@ export const Mutation = mutationField((t) => {
       worldId: nonNull(stringArg()),
       level: arg({ type: "RoleLevel" }),
     },
-    async resolve(parent, { userEmail, userId, worldId, level }, context) {
+    async resolve(
+      parent,
+      { userEmail, userId, worldId, level },
+      context,
+      info
+    ) {
+      let select = generateSelect<Prisma.WorldRoleSelect>()(
+        info,
+        { id: true },
+        "data"
+      );
       if (
         !(await userHasWorldRole(
           worldId,
@@ -198,74 +191,8 @@ export const Mutation = mutationField((t) => {
             userId,
             level,
           },
+          ...select,
         }),
-      };
-    },
-  });
-
-  t.field("updateAccessControl", {
-    type: "Permissions",
-    args: {
-      item: nonNull(arg({ type: "PermissionItemInput" })),
-      level: arg({ type: "RoleLevel" }),
-      users: list(arg({ type: "UserPermissionInput" })),
-    },
-    async resolve(parent, { item, level, users }, context) {
-      let accessFunc = userCanAccessDocument;
-      let model: any = context.prisma.documentTemplate;
-      if (item.type === ePermissionItemType.DOCUMENT_TEMPLATE) {
-        accessFunc = userCanAccessDocumentTemplate;
-        model = context.prisma.document;
-      } else if (item.type === ePermissionItemType.FOLDER) {
-        accessFunc = userCanAccessFolder;
-        model = context.prisma.folder;
-      }
-      if (
-        (await userCanAccessDocumentTemplate(item.id, "WRITE", context)) !==
-        true
-      )
-        return null;
-      let data: any = { accessLevel: level === null ? undefined : level };
-      if (users) {
-        let editDisconnectIds = users
-          .filter((u) => u?.accessLevel !== eUserAccessLevel.WRITE)
-          .map((u) => ({ id: u!.id }));
-        let editConnectIds = users
-          .filter((u) => u?.accessLevel === eUserAccessLevel.WRITE)
-          .map((u) => ({ id: u!.id }));
-        let readDisconnectIds = users
-          .filter((u) => u?.accessLevel !== eUserAccessLevel.READ)
-          .map((u) => ({ id: u!.id }));
-        let readConnectIds = users
-          .filter((u) => u?.accessLevel === eUserAccessLevel.READ)
-          .map((u) => ({ id: u!.id }));
-        data.edit = {
-          disconnect: editDisconnectIds,
-          connect: editConnectIds,
-        };
-        data.readOnly = {
-          disconnect: readDisconnectIds,
-          connect: readConnectIds,
-        };
-      }
-
-      let ret = await model.update({
-        where: { id: item.id },
-        data,
-        include: { edit: {}, readOnly: {} },
-      });
-      return {
-        item,
-        accessLevel: ret.accessLevel,
-        userAccessLevels: ret.edit
-          .map((u: User) => {
-            return { id: u.id, accessLevel: eUserAccessLevel.WRITE };
-          })
-          .concat(
-            ret.readOnly.map((u: User) => {
-              return { id: u.id, accessLevel: eUserAccessLevel.READ };
-            })
-          ),
       };
     },
   });

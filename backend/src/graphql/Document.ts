@@ -1,4 +1,7 @@
+import { Prisma } from "@prisma/client";
 import {
+  arg,
+  list,
   mutationField,
   nonNull,
   objectType,
@@ -11,6 +14,7 @@ import {
   userCanAccessDocument,
   userHasWorldRole,
 } from "../Auth/worldAuth";
+import { generateSelect } from "../Util/select";
 import { generateErrorType } from "./Errors";
 
 export const DocumentWrapper = generateErrorType({
@@ -23,6 +27,10 @@ export const Document = objectType({
   definition(t) {
     t.nonNull.id("id");
     t.nonNull.string("name");
+    t.nonNull.list.nonNull.field("edit", { type: "User" });
+    t.nonNull.list.nonNull.field("readOnly", { type: "User" });
+    t.nonNull.field("readAccessLevel", { type: "RoleLevel" });
+    t.nonNull.field("writeAccessLevel", { type: "RoleLevel" });
     t.nonNull.boolean("editable", {
       resolve: async (parent, _, context) => {
         return (
@@ -33,43 +41,15 @@ export const Document = objectType({
     t.nonNull.string("content");
     t.field("category", {
       type: "DocumentCategory",
-      resolve: async (parent, _, context) => {
-        let res = await context.prisma.documentCategory.findFirst({
-          where: { documents: { some: { id: parent.id } } },
-        });
-        return res;
-      },
     });
     t.nonNull.field("world", {
       type: "World",
-      resolve: async (parent, _, context) => {
-        let res = await context.prisma.document
-          .findUnique({
-            where: { id: parent.id! },
-          })
-          .world();
-        return res!;
-      },
     });
-    t.field("folder", {
+    t.field("parentFolder", {
       type: "Folder",
-      resolve(parent, _, context) {
-        return context.prisma.document
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .parentFolder();
-      },
     });
     t.field("creator", {
       type: "User",
-      resolve(parent, _, context) {
-        return context.prisma.document
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .creator();
-      },
     });
   },
 });
@@ -87,8 +67,14 @@ export const documentMutation = mutationField((t) => {
     async resolve(
       parent,
       { name, content, worldId, parentFolderId, categoryId },
-      context
+      context,
+      info
     ) {
+      let select = generateSelect<Prisma.DocumentSelect>()(
+        info,
+        { id: true },
+        "data"
+      );
       if (
         !(await userHasWorldRole(worldId, Math.min(roleLevels.USER), context))
       ) {
@@ -114,6 +100,7 @@ export const documentMutation = mutationField((t) => {
               },
             },
           },
+          ...select,
         }),
       };
     },
@@ -127,14 +114,66 @@ export const documentMutation = mutationField((t) => {
       parentFolderId: stringArg(),
       categoryId: stringArg(),
       name: stringArg(),
+      revokeUsers: list(nonNull(stringArg())),
+      newReadOnlyUsers: list(nonNull(stringArg())),
+      newEditorUsers: list(nonNull(stringArg())),
+      readAccessLevel: arg({ type: "RoleLevel" }),
+      writeAccessLevel: arg({ type: "RoleLevel" }),
     },
     resolve: async (
       parent,
-      { id, content, name, parentFolderId, categoryId },
-      context
+      {
+        id,
+        content,
+        name,
+        parentFolderId,
+        categoryId,
+        revokeUsers,
+        readAccessLevel,
+        newReadOnlyUsers,
+        newEditorUsers,
+        writeAccessLevel,
+      },
+      context,
+      info
     ) => {
+      let select = generateSelect<Prisma.DocumentSelect>()(info, { id: true });
       let authRes = await userCanAccessDocument(id, "WRITE", context);
       if (authRes !== true) return null;
+
+      let editRevokeList: { id: string }[] = [];
+      let editConnectList: { id: string }[] = [];
+      let readOnlyRevokeList: { id: string }[] = [];
+      let readOnlyConnectList: { id: string }[] = [];
+
+      if (revokeUsers) {
+        console.log("RevokeUsers: ", revokeUsers);
+        editRevokeList = editRevokeList.concat(
+          revokeUsers.map((e) => ({ id: e }))
+        );
+        readOnlyRevokeList = readOnlyRevokeList.concat(
+          revokeUsers.map((e) => ({ id: e }))
+        );
+      }
+
+      if (newEditorUsers) {
+        editConnectList = editConnectList.concat(
+          newEditorUsers.map((e) => ({ id: e }))
+        );
+        readOnlyRevokeList = readOnlyRevokeList.concat(
+          newEditorUsers.map((e) => ({ id: e }))
+        );
+      }
+
+      if (newReadOnlyUsers) {
+        editRevokeList = editRevokeList.concat(
+          newReadOnlyUsers.map((e) => ({ id: e }))
+        );
+        readOnlyConnectList = readOnlyConnectList.concat(
+          newReadOnlyUsers.map((e) => ({ id: e }))
+        );
+      }
+
       let ret = await context.prisma.document.update({
         where: { id },
         data: {
@@ -142,7 +181,21 @@ export const documentMutation = mutationField((t) => {
           name: name || undefined,
           parentFolderId: parentFolderId || undefined,
           categoryId: categoryId || undefined,
+          readAccessLevel:
+            readAccessLevel === null || readAccessLevel === undefined
+              ? undefined
+              : readAccessLevel,
+          writeAccessLevel:
+            writeAccessLevel === null || writeAccessLevel === undefined
+              ? undefined
+              : writeAccessLevel,
+          edit: { disconnect: editRevokeList, connect: editConnectList },
+          readOnly: {
+            disconnect: readOnlyRevokeList,
+            connect: readOnlyConnectList,
+          },
         },
+        ...select,
       });
       return ret;
     },
@@ -158,6 +211,7 @@ export const documentMutation = mutationField((t) => {
       if (authRes !== true) return null;
       let ret = await context.prisma.document.delete({
         where: { id },
+        select: { id: true },
       });
       return !!ret;
     },
@@ -170,10 +224,11 @@ export const documentQuery = queryField((t) => {
     args: {
       id: nonNull(stringArg()),
     },
-    resolve: async (parent, { id }, context) => {
+    resolve: async (parent, { id }, context, info) => {
+      let select = generateSelect<Prisma.DocumentSelect>()(info, { id: true });
       let authRes = await userCanAccessDocument(id, "READ", context);
       if (authRes !== true) return null;
-      return context.prisma.document.findUnique({ where: { id } });
+      return context.prisma.document.findUnique({ where: { id }, ...select });
     },
   });
 
@@ -182,8 +237,12 @@ export const documentQuery = queryField((t) => {
     args: {
       worldId: nonNull(stringArg()),
     },
-    resolve(parent, { worldId }, context) {
-      return context.prisma.document.findMany({ where: { worldId } });
+    resolve(parent, { worldId }, context, info) {
+      let select = generateSelect<Prisma.DocumentSelect>()(info, { id: true });
+      return context.prisma.document.findMany({
+        where: { worldId },
+        ...select,
+      });
     },
   });
 });

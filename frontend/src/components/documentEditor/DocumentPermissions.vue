@@ -1,7 +1,7 @@
 <template>
   <div v-if="fetching">Loading...</div>
   <div v-else-if="error">Oof</div>
-  <div v-else class="folder-permissions">
+  <div v-else class="document-permissions">
     <div style="display: flex">
       <div>Editors:</div>
       <div class="username-badge-list">
@@ -15,7 +15,7 @@
         </div>
       </div>
       <div
-        v-if="data.folder.editable"
+        v-if="data.document.editable"
         class="btn"
         style="margin-left: auto; padding: 0 0.5em"
         @click="addEditors = true"
@@ -41,7 +41,7 @@
         </div>
       </div>
       <div
-        v-if="data.folder.editable"
+        v-if="data.document.editable"
         class="btn"
         style="margin-left: auto; padding: 0 0.5em"
         @click="addReaders = true"
@@ -79,14 +79,14 @@ import Dropdown from "../form/Dropdown.vue";
 import ModalComponent from "../structure/ModalComponent.vue";
 
 const props = defineProps({
-  folderId: String,
+  documentId: String,
   worldId: String,
 });
 
 const { fetching, data, error } = await useQuery({
   query: gql`
-    query FolderPermissions($id: String!, $worldId: String!) {
-      folder(id: $id) {
+    query DocumentPermissions($id: String!, $worldId: String!) {
+      document(id: $id) {
         id
         editable
         edit {
@@ -113,16 +113,16 @@ const { fetching, data, error } = await useQuery({
     }
   `,
   variables: {
-    id: props.folderId,
+    id: props.documentId,
     worldId: props.worldId,
   },
 });
 
-let readAccessLevel = ref(String(data.value?.folder?.readAccessLevel));
-let writeAccessLevel = ref(String(data.value?.folder?.writeAccessLevel));
+let readAccessLevel = ref(String(data.value?.document?.readAccessLevel));
+let writeAccessLevel = ref(String(data.value?.document?.writeAccessLevel));
 
 let addEditors = ref(false);
-let edit = ref([...data.value.folder.edit]);
+let edit = ref([...data.value.document.edit]);
 
 let potentialEditors = computed(() => {
   return data.value.world.roles
@@ -137,7 +137,7 @@ let potentialEditors = computed(() => {
 });
 
 let addReaders = ref(false);
-let readOnly = ref([...data.value.folder.readOnly]);
+let readOnly = ref([...data.value.document.readOnly]);
 
 let potentialReaders = computed(() => {
   return data.value.world.roles
@@ -152,11 +152,13 @@ let potentialReaders = computed(() => {
 });
 
 const calculateDiff = () => {
-  let prevEditIds = data.value.folder.edit.map((u: { id: string }) => u.id);
+  let prevEditIds = data.value.document.edit.map((u: { id: string }) => u.id);
   let currentEditIds = edit.value.map((u) => u.id);
   let newEditors = currentEditIds.filter((a) => !prevEditIds.includes(a));
 
-  let prevReadIds = data.value.folder.readOnly.map((u: { id: string }) => u.id);
+  let prevReadIds = data.value.document.readOnly.map(
+    (u: { id: string }) => u.id
+  );
   let currentReadIds = readOnly.value.map((u) => u.id);
   let newReaders = currentReadIds.filter((a) => !prevReadIds.includes(a));
 
@@ -169,11 +171,11 @@ const calculateDiff = () => {
     newReadOnlyUsers: newReaders.length !== 0 ? newReaders : undefined,
     newEditorUsers: newEditors.length !== 0 ? newEditors : undefined,
     writeAccessLevel:
-      writeAccessLevel.value != data.value.folder.writeAccessLevel
+      writeAccessLevel.value != data.value.document.writeAccessLevel
         ? writeAccessLevel.value
         : undefined,
     readAccessLevel:
-      readAccessLevel.value != data.value.folder.readAccessLevel
+      readAccessLevel.value != data.value.document.readAccessLevel
         ? readAccessLevel.value
         : undefined,
   };
@@ -191,7 +193,7 @@ let isDifferent = computed(() => {
 });
 
 const updateMutation = useMutation(gql`
-  mutation UpdateFolderPermissions(
+  mutation UpdateDocumentPermissions(
     $id: String!
     $writeAccessLevel: RoleLevel
     $readAccessLevel: RoleLevel
@@ -199,7 +201,7 @@ const updateMutation = useMutation(gql`
     $newReadOnlyUsers: [String!]
     $revokeUsers: [String!]
   ) {
-    updateFolder(
+    updateDocument(
       id: $id
       writeAccessLevel: $writeAccessLevel
       readAccessLevel: $readAccessLevel
@@ -224,7 +226,7 @@ const updateMutation = useMutation(gql`
 
 const save = async () => {
   await updateMutation.executeMutation({
-    id: props.folderId,
+    id: props.documentId,
     ...calculateDiff(),
   });
 };
@@ -249,7 +251,7 @@ const removeReader = (u: { id: string }) => {
 </script>
 
 <style scoped>
-.folder-permissions {
+.document-permissions {
   padding: 2em;
   display: flex;
   flex-direction: column;

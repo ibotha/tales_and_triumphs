@@ -81,13 +81,13 @@ const { fetching, data, error } = useQuery({
         id
         name
         myRole
-        users {
+        roles {
           id
-          username
-          role(worldId: $id) {
+          user {
             id
-            level
+            username
           }
+          level
         }
       }
     }

@@ -1,3 +1,4 @@
+import { PrismaSelect } from "@paljs/plugins";
 import { hash, verify } from "argon2";
 import {
   objectType,
@@ -9,6 +10,8 @@ import {
 import { ValidationError } from "yup";
 import { updateUserSchema } from "../Validation/userValidation";
 import { generateErrorType } from "./Errors";
+import { Prisma, User as UserType, World as WorldType } from "@prisma/client";
+import { generateSelect } from "../Util/select";
 
 export const User = objectType({
   name: "User",
@@ -16,41 +19,14 @@ export const User = objectType({
     t.nonNull.id("id");
     t.nonNull.string("username");
     t.string("email", {
-      resolve: (parent: any, _, context) => {
-        if (parent.id == context.req.session.user?.id) return parent.email;
+      resolve: (parent, _, context) => {
+        if (parent.id == context.req.session.user?.id)
+          return parent.email || null;
         return null;
       },
     });
-    t.nonNull.list.nonNull.field("createdWorlds", {
-      type: "World",
-      resolve(parent, args, context) {
-        return context.prisma.user
-          .findUnique({ where: { id: parent.id } })
-          .createdWorlds();
-      },
-    });
-    t.nonNull.list.nonNull.field("roles", {
-      type: "WorldRole",
-      resolve(parent, args, context) {
-        return context.prisma.user
-          .findUnique({ where: { id: parent.id } })
-          .roles();
-      },
-    });
-    t.field("role", {
-      type: "WorldRole",
-      args: {
-        worldId: nonNull(stringArg()),
-      },
-      description: "Role level within the context of the world.",
-      resolve: (parent, { worldId }, context) => {
-        return context.prisma.worldRole.findUnique({
-          where: {
-            userId_worldId: { userId: parent.id, worldId },
-          },
-        });
-      },
-    });
+    t.nonNull.list.nonNull.field("createdWorlds", { type: "World" });
+    t.nonNull.list.nonNull.field("roles", { type: "WorldRole" });
   },
 });
 
@@ -62,17 +38,25 @@ export const UserPayload = generateErrorType({
 export const userQuery = queryField((t) => {
   t.nonNull.list.nonNull.field("users", {
     type: "User",
-    resolve(parent, args, context, info) {
-      return context.prisma.user.findMany();
+    async resolve(parent, args, context, info) {
+      let select = generateSelect<Prisma.UserSelect>()(info, {
+        id: true,
+      });
+      let user = await context.prisma.user.findMany({ ...select });
+      return user;
     },
   });
 
   t.field("me", {
     type: "User",
-    resolve(parent, _, context) {
+    resolve(parent, _, context, info) {
+      let select = generateSelect<Prisma.UserSelect>()(info, {
+        id: true,
+      });
       if (!context.req.session.user) return null;
       return context.prisma.user.findUnique({
         where: { id: context.req.session.user.id },
+        ...select,
       });
     },
   });
@@ -86,8 +70,10 @@ export const userMutation = mutationField((t) => {
       password: stringArg(),
       newPassword: stringArg(),
     },
-    resolve: async (parent, args, context) => {
+    resolve: async (parent, args, context, info) => {
       if (!context.req.session.user) return { errors: ["Must be logged in!"] };
+
+      // Validate against update Schema
       try {
         await updateUserSchema.validate(args, { abortEarly: false });
       } catch (e: any) {
@@ -99,6 +85,8 @@ export const userMutation = mutationField((t) => {
           fieldErrors,
         };
       }
+
+      // If providing a new Password validate against the old one.
       if (args.newPassword) {
         let user = await context.prisma.user.findUnique({
           where: { id: context.req.session.user.id },
@@ -112,6 +100,9 @@ export const userMutation = mutationField((t) => {
             fieldErrors: [{ field: "password", message: "Incorrect Password" }],
           };
       }
+
+      // Update the user and return the changes
+      let select = new PrismaSelect(info).valueOf("data") as Prisma.UserSelect;
       let user = await context.prisma.user.update({
         where: { id: context.req.session.user.id },
         data: {
@@ -120,7 +111,9 @@ export const userMutation = mutationField((t) => {
             : undefined,
           username: args.username || undefined,
         },
+        select,
       });
+      return { data: user };
     },
   });
 });

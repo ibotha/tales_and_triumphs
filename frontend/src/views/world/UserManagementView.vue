@@ -10,9 +10,9 @@
         margin-bottom: 1em;
       "
     >
-      <div v-for="u in data.world.users" :key="u.id">
-        <span style="font-weight: bold">{{ u.username }}</span>
-        {{ u.role.level }}
+      <div v-for="u in data.world.roles" :key="u.id">
+        <span style="font-weight: bold">{{ u.user.username }}</span>
+        {{ u.level }}
       </div>
     </div>
     <Invite v-if="data.world.myRole === 'ADMIN'" />
@@ -32,13 +32,13 @@ const { fetching, data, error } = useQuery({
       world(id: $id) {
         id
         myRole
-        users {
+        roles {
           id
-          username
-          role(worldId: $id) {
+          user {
             id
-            level
+            username
           }
+          level
         }
       }
     }

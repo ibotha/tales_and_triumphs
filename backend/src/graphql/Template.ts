@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import {
   mutationField,
   nonNull,
@@ -11,6 +12,7 @@ import {
   userCanAccessDocumentTemplate,
   userHasWorldRole,
 } from "../Auth/worldAuth";
+import { generateSelect } from "../Util/select";
 
 export const DocumentTemplate = objectType({
   name: "DocumentTemplate",
@@ -37,7 +39,10 @@ export const documentTemplateMutation = mutationField((t) => {
       content: nonNull(stringArg()),
       worldId: nonNull(stringArg()),
     },
-    async resolve(parent, { name, content, worldId }, context) {
+    async resolve(parent, { name, content, worldId }, context, info) {
+      let select = generateSelect<Prisma.DocumentTemplateSelect>()(info, {
+        id: true,
+      });
       if (
         !(await userHasWorldRole(worldId, Math.min(roleLevels.USER), context))
       ) {
@@ -60,6 +65,8 @@ export const documentTemplateMutation = mutationField((t) => {
             },
           },
         },
+
+        ...select,
       });
     },
   });
@@ -71,12 +78,16 @@ export const documentTemplateMutation = mutationField((t) => {
       content: stringArg(),
       name: stringArg(),
     },
-    resolve: async (parent, { id, content, name }, context) => {
+    resolve: async (parent, { id, content, name }, context, info) => {
+      let select = generateSelect<Prisma.DocumentTemplateSelect>()(info, {
+        id: true,
+      });
       let authRes = await userCanAccessDocumentTemplate(id, "WRITE", context);
       if (authRes !== true) return null;
       let ret = await context.prisma.documentTemplate.update({
         where: { id },
         data: { content: content || undefined, name: name || undefined },
+        ...select,
       });
       return ret;
     },
@@ -92,6 +103,7 @@ export const documentTemplateMutation = mutationField((t) => {
       if (authRes !== true) return null;
       let ret = await context.prisma.documentTemplate.delete({
         where: { id },
+        select: { id: true },
       });
       return !!ret;
     },
@@ -104,10 +116,16 @@ export const documentTemplateQuery = queryField((t) => {
     args: {
       id: nonNull(stringArg()),
     },
-    resolve: async (parent, { id }, context) => {
+    resolve: async (parent, { id }, context, info) => {
+      let select = generateSelect<Prisma.DocumentTemplateSelect>()(info, {
+        id: true,
+      });
       let authRes = await userCanAccessDocumentTemplate(id, "READ", context);
       if (authRes !== true) return null;
-      return context.prisma.documentTemplate.findUnique({ where: { id } });
+      return context.prisma.documentTemplate.findUnique({
+        where: { id },
+        ...select,
+      });
     },
   });
 
@@ -116,8 +134,14 @@ export const documentTemplateQuery = queryField((t) => {
     args: {
       worldId: nonNull(stringArg()),
     },
-    resolve(parent, { worldId }, context) {
-      return context.prisma.documentTemplate.findMany({ where: { worldId } });
+    resolve(parent, { worldId }, context, info) {
+      let select = generateSelect<Prisma.DocumentTemplateSelect>()(info, {
+        id: true,
+      });
+      return context.prisma.documentTemplate.findMany({
+        where: { worldId },
+        ...select,
+      });
     },
   });
 });
