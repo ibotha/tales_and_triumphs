@@ -1,0 +1,70 @@
+import { Node } from "@tiptap/core";
+import {
+  mergeAttributes,
+  nodeInputRule,
+  VueNodeViewRenderer,
+} from "@tiptap/vue-3";
+import DocumentLink from "./DocumentLink.vue";
+
+export const DocumentLinkNode = Node.create({
+  name: "DocumentLink",
+
+  group: "inline",
+
+  inline: true,
+
+  selectable: false,
+
+  atom: true,
+
+  addAttributes() {
+    return {
+      documentId: {
+        parseHTML: (element) => element.getAttribute("documentId"),
+        renderHTML: (attributes) => {
+          if (!attributes.documentId) {
+            return {};
+          }
+
+          return {
+            documentId: attributes.documentId,
+          };
+        },
+        default: null,
+      },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: "document-link",
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ["document-link", mergeAttributes(HTMLAttributes)];
+  },
+
+  addNodeView() {
+    return VueNodeViewRenderer(DocumentLink);
+  },
+});
+
+export const DocumentLinkNodeExtension = DocumentLinkNode.extend({
+  addInputRules() {
+    return [
+      nodeInputRule({
+        find: /(?:^|\s)((?:@doc:)((?:[^~]+))(?:;))$/,
+        type: this.type,
+        getAttributes(e) {
+          console.log(e);
+          return {
+            documentId: e[2],
+          };
+        },
+      }),
+    ];
+  },
+});

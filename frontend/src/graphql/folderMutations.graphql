@@ -1,0 +1,77 @@
+mutation moveFolder($folderId: String!, $parentFolderId: String!) {
+  updateFolder(id: $folderId, parentFolderId: $parentFolderId) {
+    id
+    parentFolder {
+      id
+    }
+  }
+}
+
+mutation DeleteFolder($id: String!) {
+  deleteFolder(id: $id) {
+    id
+    parentFolder {
+      id
+    }
+  }
+}
+
+mutation UpdateFolderPermissions(
+  $id: String!
+  $writeAccessLevel: RoleLevel
+  $readAccessLevel: RoleLevel
+  $newEditorUsers: [String!]
+  $newReadOnlyUsers: [String!]
+  $revokeUsers: [String!]
+) {
+  updateFolder(
+    id: $id
+    writeAccessLevel: $writeAccessLevel
+    readAccessLevel: $readAccessLevel
+    newEditorUsers: $newEditorUsers
+    newReadOnlyUsers: $newReadOnlyUsers
+    revokeUsers: $revokeUsers
+  ) {
+    id
+    writeAccessLevel
+    readAccessLevel
+    edit {
+      id
+      username
+    }
+    readOnly {
+      id
+      username
+    }
+  }
+}
+
+mutation CreateFolder(
+  $name: String!
+  $parentFolderId: String!
+  $worldId: String!
+) {
+  createFolder(
+    name: $name
+    parentFolderId: $parentFolderId
+    worldId: $worldId
+  ) {
+    data {
+      id
+      name
+    }
+    errors
+    fieldErrors {
+      field
+      message
+    }
+  }
+}
+
+mutation UpdateFolder($name: String!, $id: String!, $colour: String!) {
+  updateFolder(name: $name, id: $id, colour: $colour) {
+    id
+    name
+    colour
+  }
+}

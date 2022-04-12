@@ -1,0 +1,71 @@
+query FolderContents($id: String!) {
+  folder(id: $id) {
+    id
+    name
+    colour
+    documents {
+      id
+      name
+    }
+    subfolders {
+      id
+      name
+    }
+  }
+}
+
+query Folder($id: String!) {
+  folder(id: $id) {
+    id
+    name
+    colour
+    edit {
+      id
+    }
+    readOnly {
+      id
+    }
+    readAccessLevel
+    writeAccessLevel
+    parentFolder {
+      id
+    }
+    documents {
+      id
+      name
+    }
+    subfolders {
+      id
+      name
+      colour
+    }
+    editable
+  }
+}
+
+query FolderPermissions($id: String!, $worldId: String!) {
+  folder(id: $id) {
+    id
+    editable
+    edit {
+      id
+      username
+    }
+    readOnly {
+      id
+      username
+    }
+    readAccessLevel
+    writeAccessLevel
+  }
+  world(id: $worldId) {
+    id
+    roles {
+      id
+      user {
+        id
+        username
+      }
+    }
+  }
+}

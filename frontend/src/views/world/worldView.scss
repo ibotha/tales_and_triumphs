@@ -1,0 +1,7 @@
+.explorer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 9em);
+  grid-auto-rows: 9em;
+  gap: 0.5em;
+  margin-bottom: 1em;
+}

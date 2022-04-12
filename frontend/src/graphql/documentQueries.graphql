@@ -1,0 +1,44 @@
+fragment BasicDocument on Document {
+  id
+  name
+  parentFolder {
+    id
+  }
+  editable
+  content
+  world {
+    id
+  }
+}
+query Document($id: String!) {
+  document(id: $id) {
+    ...BasicDocument
+  }
+}
+
+query DocumentPermissions($id: String!, $worldId: String!) {
+  document(id: $id) {
+    id
+    editable
+    edit {
+      id
+      username
+    }
+    readOnly {
+      id
+      username
+    }
+    readAccessLevel
+    writeAccessLevel
+  }
+  world(id: $worldId) {
+    id
+    roles {
+      id
+      user {
+        id
+        username
+      }
+    }
+  }
+}

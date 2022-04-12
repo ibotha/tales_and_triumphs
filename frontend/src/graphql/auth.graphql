@@ -1,0 +1,27 @@
+mutation Login($email: String!, $password: String!) {
+  login(email: $email, password: $password) {
+    fieldErrors {
+      field
+      message
+    }
+  }
+}
+
+mutation Register($email: String!, $password: String!, $username: String!) {
+  register(email: $email, password: $password, username: $username) {
+    data {
+      id
+      username
+      email
+    }
+    errors
+    fieldErrors {
+      field
+      message
+    }
+  }
+}
+
+mutation Logout {
+  logout
+}

@@ -1,0 +1,22 @@
+overwrite: true
+schema: "http://localhost:4000/graphql"
+documents: "src/graphql/**/*.graphql"
+generates:
+  src/generated/graphql-components.tsx:
+    config:
+      withHooks: true
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-urql
+
+  src/generated/graphql-documents.ts:
+    plugins:
+      - "typescript-document-nodes"
+    config:
+      namingConvention:
+        typeNames: "change-case-all#camelCase"
+
+  src/generated/graphql.schema.json:
+    plugins:
+      - "introspection"

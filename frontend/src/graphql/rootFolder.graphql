@@ -1,0 +1,8 @@
+query RootFolder($worldId: String!) {
+  world(id: $worldId) {
+    id
+    rootFolder {
+      id
+    }
+  }
+}

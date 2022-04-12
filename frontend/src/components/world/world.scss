@@ -1,0 +1,21 @@
+.banner-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin: 1em 0;
+}
+
+.summary-banner {
+  width: 100%;
+  box-shadow: -2px 2px var(--color-background-mute);
+  background-color: var(--color-background-soft);
+  cursor: pointer;
+  padding: 2em;
+}
+
+.invite-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  justify-items: center;
+}

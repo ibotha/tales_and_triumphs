@@ -3,8 +3,9 @@ export const convertFieldErrors = (
 ) => {
   const ret: { [key: string]: string[] } = {};
   errors.forEach((err) => {
-    if (!ret[err.field]) ret[err.field] = [err.message];
-    else ret[err.field] = ret[err.field].concat([err.message]);
+    const key = err.field;
+    if (!ret[key]) ret[key] = [err.message];
+    else ret[key] = ret[key]!.concat([err.message]);
   });
   return ret;
 };

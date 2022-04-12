@@ -1,0 +1,13 @@
+mutation AssignUserRole($email: String!, $worldId: String!, $level: RoleLevel) {
+  assignWorldRole(worldId: $worldId, userEmail: $email, level: $level) {
+    data {
+      id
+      level
+    }
+    errors
+    fieldErrors {
+      field
+      message
+    }
+  }
+}

@@ -1,0 +1,42 @@
+query World($id: String!) {
+  world(id: $id) {
+    id
+    name
+    myRole
+    roles {
+      id
+      user {
+        id
+        username
+      }
+      level
+    }
+    rootFolder {
+      id
+    }
+  }
+}
+
+mutation DeleteWorld($worldId: String!) {
+  deleteWorld(id: $worldId)
+}
+
+query MyWorlds {
+  myWorlds {
+    id
+  }
+}
+
+mutation CreateWorld($name: String!) {
+  createWorld(name: $name) {
+    data {
+      id
+      name
+    }
+    errors
+    fieldErrors {
+      field
+      message
+    }
+  }
+}

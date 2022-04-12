@@ -1,0 +1,71 @@
+mutation moveDocument($documentId: String!, $parentFolderId: String!) {
+  updateDocument(id: $documentId, parentFolderId: $parentFolderId) {
+    id
+    parentFolder {
+      id
+    }
+  }
+}
+
+mutation CreateDocument(
+  $name: String!
+  $parentFolderId: String!
+  $worldId: String!
+) {
+  createDocument(
+    name: $name
+    parentFolderId: $parentFolderId
+    worldId: $worldId
+  ) {
+    data {
+      id
+      name
+    }
+    errors
+    fieldErrors {
+      field
+      message
+    }
+  }
+}
+
+mutation DeleteDocument($id: String!) {
+  deleteDocument(id: $id)
+}
+
+mutation UpdateDocument($id: String!, $content: String) {
+  updateDocument(id: $id, content: $content) {
+    id
+    content
+  }
+}
+
+mutation UpdateDocumentPermissions(
+  $id: String!
+  $writeAccessLevel: RoleLevel
+  $readAccessLevel: RoleLevel
+  $newEditorUsers: [String!]
+  $newReadOnlyUsers: [String!]
+  $revokeUsers: [String!]
+) {
+  updateDocument(
+    id: $id
+    writeAccessLevel: $writeAccessLevel
+    readAccessLevel: $readAccessLevel
+    newEditorUsers: $newEditorUsers
+    newReadOnlyUsers: $newReadOnlyUsers
+    revokeUsers: $revokeUsers
+  ) {
+    id
+    writeAccessLevel
+    readAccessLevel
+    edit {
+      id
+      username
+    }
+    readOnly {
+      id
+      username
+    }
+  }
+}
