@@ -16,36 +16,6 @@ mutation DeleteFolder($id: String!) {
   }
 }
 
-mutation UpdateFolderPermissions(
-  $id: String!
-  $writeAccessLevel: RoleLevel
-  $readAccessLevel: RoleLevel
-  $newEditorUsers: [String!]
-  $newReadOnlyUsers: [String!]
-  $revokeUsers: [String!]
-) {
-  updateFolder(
-    id: $id
-    writeAccessLevel: $writeAccessLevel
-    readAccessLevel: $readAccessLevel
-    newEditorUsers: $newEditorUsers
-    newReadOnlyUsers: $newReadOnlyUsers
-    revokeUsers: $revokeUsers
-  ) {
-    id
-    writeAccessLevel
-    readAccessLevel
-    edit {
-      id
-      username
-    }
-    readOnly {
-      id
-      username
-    }
-  }
-}
-
 mutation CreateFolder(
   $name: String!
   $parentFolderId: String!

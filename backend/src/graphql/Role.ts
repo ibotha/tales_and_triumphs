@@ -10,14 +10,9 @@ import {
   objectType,
   stringArg,
 } from "nexus";
-import {
-  roleLevels,
-  userCanAccessDocument,
-  userCanAccessDocumentTemplate,
-  userCanAccessFolder,
-  userHasWorldRole,
-} from "../Auth/worldAuth";
-import { generateSelect } from "../Util/select";
+import { userHasWorldRole } from "../Auth/worldAuth";
+import { eWorldRole } from "../types";
+import { generateSelection } from "../Util/select";
 import { generateErrorType } from "./Errors";
 
 export const WorldRole = objectType({
@@ -52,10 +47,10 @@ export const PermissionItemType = enumType({
 export const RoleLevel = enumType({
   name: "RoleLevel",
   members: {
-    ADMIN: roleLevels.ADMIN,
-    TRUSTED: roleLevels.TRUSTED,
-    USER: roleLevels.USER,
-    PUBLIC: roleLevels.PUBLIC,
+    ADMIN: eWorldRole.ADMIN,
+    TRUSTED: eWorldRole.TRUSTED,
+    USER: eWorldRole.USER,
+    PUBLIC: eWorldRole.PUBLIC,
   },
 });
 
@@ -117,7 +112,7 @@ export const Permissions = objectType({
   },
 });
 
-export const Mutation = mutationField((t) => {
+export const RoleMutation = mutationField((t) => {
   t.field("assignWorldRole", {
     type: "AssignmentPayload",
     args: {
@@ -132,15 +127,11 @@ export const Mutation = mutationField((t) => {
       context,
       info
     ) {
-      let select = generateSelect<Prisma.WorldRoleSelect>()(
-        info,
-        { id: true },
-        "data"
-      );
+      const select = generateSelection<"Role">(info, "data");
       if (
         !(await userHasWorldRole(
           worldId,
-          Math.min(roleLevels.TRUSTED, level || roleLevels.ADMIN),
+          Math.min(eWorldRole.TRUSTED, level || eWorldRole.ADMIN),
           context
         ))
       ) {
@@ -165,7 +156,6 @@ export const Mutation = mutationField((t) => {
       if (!userId) return { errors: ["No valid userId"] };
 
       if (level === null || level === undefined) {
-        console.log("Deleting");
         let u = await context.prisma.worldRole.delete({
           where: { userId_worldId: { userId, worldId } },
         });

@@ -11,3 +11,60 @@ mutation AssignUserRole($email: String!, $worldId: String!, $level: RoleLevel) {
     }
   }
 }
+
+mutation UpdatePermissions(
+  $objectAccessControlId: String!
+  $writeAccessLevel: RoleLevel
+  $readAccessLevel: RoleLevel
+  $newEditorUsers: [String!]
+  $newReadOnlyUsers: [String!]
+  $revokeUsers: [String!]
+) {
+  updateAccessControl(
+    id: $objectAccessControlId
+    writeAccessLevel: $writeAccessLevel
+    readAccessLevel: $readAccessLevel
+    newEditorUsers: $newEditorUsers
+    newReadOnlyUsers: $newReadOnlyUsers
+    revokeUsers: $revokeUsers
+  ) {
+    id
+    writeAccessLevel
+    readAccessLevel
+    edit {
+      id
+      username
+    }
+    readOnly {
+      id
+      username
+    }
+  }
+}
+
+query Permissions($objectAccessControlId: String!, $worldId: String!) {
+  objectAccessControl(id: $objectAccessControlId) {
+    id
+    writeAccessLevel
+    readAccessLevel
+    edit {
+      id
+      username
+    }
+    readOnly {
+      id
+      username
+    }
+    editable
+  }
+  world(id: $worldId) {
+    id
+    roles {
+      id
+      user {
+        id
+        username
+      }
+    }
+  }
+}

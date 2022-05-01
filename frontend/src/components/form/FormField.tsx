@@ -70,16 +70,10 @@ const FormField: FunctionComponent<Props> = ({
   };
 
   const input = (e: FormEvent<HTMLInputElement>) => {
-    console.log(name, e.currentTarget.value);
     if (props.type === "checkbox")
       props.onInput(Boolean(e.currentTarget.value));
     else props.onInput(e.currentTarget.value);
   };
-
-  // const updateColour = (e: ) => {
-  //   if (props.type === "colour")
-  //     props.onInput(e.colors.hex.substring(0, 7))
-  // };
 
   return (
     <div className="form-field">
@@ -142,6 +136,7 @@ const FormField: FunctionComponent<Props> = ({
                 onChange={(c) => {
                   props.onChange(c.hex);
                 }}
+                width={240}
               />
             );
           } else {

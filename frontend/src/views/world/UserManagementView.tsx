@@ -16,7 +16,7 @@ const UserManagementView: FunctionComponent<Props> = ({}) => {
 
   if (fetching) return <div>Loading...</div>;
   if (!data || !data.world || error) return <div>{JSON.stringify(error)}</div>;
-  console.log(data);
+
   return (
     <div
       style={{

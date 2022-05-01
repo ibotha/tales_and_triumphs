@@ -1,0 +1,13 @@
+query TextSection($id: String!) {
+  textSection(id: $id) {
+    id
+    content
+  }
+}
+
+mutation UpdateTextSection($id: String!, $content: String) {
+  updateTextSection(content: $content, id: $id) {
+    id
+    content
+  }
+}

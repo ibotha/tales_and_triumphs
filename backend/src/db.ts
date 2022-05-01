@@ -1,138 +1,104 @@
-export type UserModel = {
-  id: string;
-  createdAt?: string;
-  updatedAt?: string;
-  username?: string;
-  email?: string;
-  pwHash?: string;
-  createdWorlds?: WorldModel;
-  roles?: WorldRoleModel;
-  groups?: UserGroupModel;
+import { Prisma, User, World, WorldRole } from "@prisma/client";
 
-  // Category Relations
-  createdCategories?: DocumentCategoryModel;
+type GenericConvert<T, C> = T extends unknown[] ? C[] : C;
+type GenericMaybeArray<T> = T | T[];
 
-  // Document relations
-  createdDocuments?: DocumentModel;
-  readOnlyDocuments?: DocumentModel;
-  editableDocuments?: DocumentModel;
+type ModelMap<T> = T extends GenericMaybeArray<User>
+  ? GenericConvert<T, UserModel>
+  : T extends GenericMaybeArray<World>
+  ? GenericConvert<T, WorldModel>
+  : T extends GenericMaybeArray<WorldRole>
+  ? GenericConvert<T, WorldRoleModel>
+  : T;
 
-  // Folder relations
-  createdFolders?: FolderModel;
-  readOnlyFolders?: FolderModel;
-  editableFolders?: FolderModel;
-
-  // Document Template relations
-  createdDocumentTemplates?: DocumentTemplateModel;
-  rHgS5orgPvsuzJ7shn8vw28y1XaePY4uDP?: DocumentTemplateModel;
-  editableDocumentTemplates?: DocumentTemplateModel;
+type GenericModel<T> = { id: string } & {
+  [Property in keyof T]?: ModelMap<T[Property]>;
 };
 
-export type WorldModel = {
-  id: string;
-  createdAt?: string;
-  updatedAt?: string;
-  name?: string;
-  creator?: UserModel;
-  creatorId?: string;
-  groups?: UserGroupModel;
-  roles?: WorldRoleModel;
-  categories?: DocumentCategoryModel;
+export type UserModel = GenericModel<
+  Prisma.UserGetPayload<{
+    include: {
+      [Property in keyof Prisma.UserInclude]-?: true;
+    };
+  }>
+>;
 
-  documents?: DocumentModel;
-  folders?: FolderModel;
-  documentTemplates?: DocumentTemplateModel;
-};
+export type WorldModel = GenericModel<
+  Prisma.WorldGetPayload<{
+    include: {
+      [Property in keyof Prisma.WorldInclude]-?: true;
+    };
+  }>
+>;
 
-export type WorldRoleModel = {
-  id: string;
-  user?: UserModel;
-  userId?: string;
-  level?: number;
-  world?: WorldModel;
-  worldId?: string;
-};
+export type WorldRoleModel = GenericModel<
+  Prisma.WorldRoleGetPayload<{
+    include: {
+      [Property in keyof Prisma.WorldRoleInclude]-?: true;
+    };
+  }>
+>;
 
-export type UserGroupModel = {
-  id: string;
-  name?: string;
-  world?: WorldModel;
-  worldId?: string;
-  users?: UserModel;
-};
+export type UserGroupModel = GenericModel<
+  Prisma.UserGroupGetPayload<{
+    include: {
+      [Property in keyof Prisma.UserGroupInclude]-?: true;
+    };
+  }>
+>;
 
-export type DocumentModel = {
-  id: string;
-  createdAt?: string;
-  updatedAt?: string;
-  mentions?: DocumentModel;
-  mentionedIn?: DocumentModel;
-  content?: string;
-  name?: string;
-  category?: DocumentCategoryModel;
-  categoryId?: string;
-  parentFolder?: FolderModel;
-  parentFolderId?: string;
+export type DocumentModel = GenericModel<
+  Prisma.DocumentGetPayload<{
+    include: {
+      [Property in keyof Prisma.DocumentInclude]-?: true;
+    };
+  }>
+>;
 
-  // Access Control
-  readAccessLevel?: 0 | 1 | 2 | 3;
-  writeAccessLevel?: 0 | 1 | 2 | 3;
-  world?: WorldModel;
-  worldId?: string;
-  creator?: UserModel;
-  creatorId?: string;
-  readOnly?: UserModel;
-  edit?: UserModel;
-};
+export type DocumentCategoryModel = GenericModel<
+  Prisma.DocumentCategoryGetPayload<{
+    include: {
+      [Property in keyof Prisma.DocumentCategoryInclude]-?: true;
+    };
+  }>
+>;
 
-export type DocumentCategoryModel = {
-  id: string;
-  createdAt?: string;
-  updatedAt?: string;
-  world?: WorldModel;
-  worldId?: string;
-  name?: string;
-  colour?: string;
-  documents?: DocumentModel;
-  creator?: UserModel;
-  creatorId?: string;
-};
+export type FolderModel = GenericModel<
+  Prisma.FolderGetPayload<{
+    include: {
+      [Property in keyof Prisma.FolderInclude]-?: true;
+    };
+  }>
+>;
 
-export type FolderModel = {
-  id: string;
-  createdAt?: string;
-  updatedAt?: string;
-  name?: string;
-  colour?: string;
-  documents?: DocumentModel;
-  subfolders?: FolderModel;
-  parentFolder?: FolderModel;
-  parentFolderId?: string;
-  // Access Control
-  readAccessLevel?: 0 | 1 | 2 | 3;
-  writeAccessLevel?: 0 | 1 | 2 | 3;
-  world?: WorldModel;
-  worldId?: string;
-  creator?: UserModel;
-  creatorId?: string;
-  readOnly?: UserModel;
-  edit?: UserModel;
-};
+export type DocumentTemplateModel = GenericModel<
+  Prisma.DocumentTemplateGetPayload<{
+    include: {
+      [Property in keyof Prisma.DocumentTemplateInclude]-?: true;
+    };
+  }>
+>;
 
-export type DocumentTemplateModel = {
-  id: string;
-  createdAt?: string;
-  updatedAt?: string;
-  name?: string;
-  content?: string;
+export type ObjectAccessControlModel = GenericModel<
+  Prisma.ObjectAccessControlGetPayload<{
+    include: {
+      [Property in keyof Prisma.ObjectAccessControlInclude]-?: true;
+    };
+  }>
+>;
 
-  // Access Control
-  readAccessLevel?: 0 | 1 | 2 | 3;
-  writeAccessLevel?: 0 | 1 | 2 | 3;
-  world?: WorldModel;
-  worldId?: string;
-  creator?: UserModel;
-  creatorId?: string;
-  readOnly?: UserModel;
-  edit?: UserModel;
-};
+export type DocumentSectionModel = GenericModel<
+  Prisma.DocumentSectionGetPayload<{
+    include: {
+      [Property in keyof Prisma.DocumentSectionInclude]-?: true;
+    };
+  }>
+>;
+
+export type TextSectionModel = GenericModel<
+  Prisma.TextSectionGetPayload<{
+    include: {
+      [Property in keyof Prisma.TextSectionInclude]-?: true;
+    };
+  }>
+>;

@@ -6,7 +6,6 @@ type Props = {};
 
 const RedirectToRoot: FunctionComponent<Props> = ({}) => {
   const params = useParams();
-  console.log(params);
   const [{ data, fetching, error }] = useWorldQuery({
     variables: { id: params.worldId! },
   });

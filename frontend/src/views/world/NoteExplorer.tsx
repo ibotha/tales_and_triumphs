@@ -4,7 +4,7 @@ import CreateDocument from "../../components/noteExplorer/CreateDocument";
 import CreateFolder from "../../components/noteExplorer/CreateFolder";
 import DocumentIcon from "../../components/noteExplorer/DocumentIcon";
 import FolderIcon from "../../components/noteExplorer/FolderIcon";
-import FolderPermissions from "../../components/noteExplorer/FolderPermissions";
+import FolderPermissions from "../../components/noteExplorer/Permissions";
 import FolderTree, {
   ObjectBundle,
   ObjectTypes,
@@ -70,7 +70,6 @@ const NoteExplorer: FunctionComponent<Props> = ({}) => {
   };
 
   let updateClicked = (i: number) => {
-    console.log(data.folder!.subfolders[i]);
     setUpdateFolder(data.folder!.subfolders[i]);
   };
 
@@ -79,73 +78,88 @@ const NoteExplorer: FunctionComponent<Props> = ({}) => {
     else if (s.type === ObjectTypes.Folder) navigate(`../folder/${s.id}`);
   };
   return (
-    <div>
-      <div style={{ display: "flex", gap: "0.5em" }}>
+    <div style={{ height: "100%" }}>
+      <div
+        style={{
+          display: "grid",
+          gap: "0.25em",
+          gridTemplateRows: "min-content min-content auto min-content",
+          height: "100%",
+        }}
+      >
         {data.folder.parentFolder ? (
-          <Link
-            className="btn"
-            to={`../folder/${data.folder.parentFolder!.id}`}
+          <h2
+            style={{
+              backgroundColor: "var(--color-background-mute)",
+              boxShadow: "2px 1px 5px rgb(0.3, 0.3, 0.3, 0.2)",
+            }}
           >
-            <i className="fa fa-caret-left" aria-hidden="true"></i>
-          </Link>
-        ) : null}
+            {data.folder.name}
+          </h2>
+        ) : (
+          <div></div>
+        )}
+        <div style={{ display: "flex", gap: "0.25em", padding: "0 0.5em" }}>
+          {data.folder.parentFolder ? (
+            <Link
+              className="btn"
+              to={`../folder/${data.folder.parentFolder!.id}`}
+            >
+              <i className="fa fa-caret-left" aria-hidden="true"></i>
+            </Link>
+          ) : null}
 
-        <div onClick={() => setCreateFolderModal(true)} className="btn">
-          <i className="fa fa-folder" aria-hidden="true"></i>+
-        </div>
-        <div onClick={() => setCreateDocumentModal(true)} className="btn">
-          <i className="fa fa-file" aria-hidden="true"></i>+
-        </div>
-        <div onClick={() => setJumpToModal(true)} className="btn">
-          <i className="fa fa-align-left" aria-hidden="true"></i>
-        </div>
-        {data.folder.parentFolder && data.folder.editable ? (
-          <div className="btn" onClick={() => setMoveDocumentModal(true)}>
-            Move
+          <div onClick={() => setCreateFolderModal(true)} className="btn">
+            <i className="fa fa-folder" aria-hidden="true"></i>+
           </div>
-        ) : null}
-        {data.folder.parentFolder && data.folder.editable ? (
-          <div
-            style={{ backgroundColor: "brown" }}
-            className="btn"
-            onClick={() => setDeleteFolderModal(true)}
-          >
-            Delete
+          <div onClick={() => setCreateDocumentModal(true)} className="btn">
+            <i className="fa fa-file" aria-hidden="true"></i>+
           </div>
-        ) : null}
-      </div>
-      {data.folder.parentFolder ? (
-        <h2
-          style={{
-            backgroundColor: "var(--color-background-mute)",
-            margin: "0.5em 0 0 0",
-            boxShadow: "2px 1px 5px rgb(0.3, 0.3, 0.3, 0.2)",
-          }}
-        >
-          {data.folder.name}
-        </h2>
-      ) : null}
-      <div className="explorer">
-        {data.folder.subfolders.map((folder, i) => {
-          return (
-            <FolderIcon
-              key={folder.id}
-              folderId={folder.id}
-              onUpdateClicked={() => updateClicked(i)}
-            />
-          );
-        })}
+          <div onClick={() => setJumpToModal(true)} className="btn">
+            <i className="fa fa-align-left" aria-hidden="true"></i>
+          </div>
+          {data.folder.parentFolder &&
+          data.folder.objectAccessControl.editable ? (
+            <div className="btn" onClick={() => setMoveDocumentModal(true)}>
+              Move
+            </div>
+          ) : null}
+          {data.folder.parentFolder &&
+          data.folder.objectAccessControl.editable ? (
+            <div
+              style={{ backgroundColor: "brown" }}
+              className="btn"
+              onClick={() => setDeleteFolderModal(true)}
+            >
+              Delete
+            </div>
+          ) : null}
+        </div>
+        <div className="explorer">
+          {data.folder.subfolders.map((folder, i) => {
+            return (
+              <FolderIcon
+                key={folder.id}
+                folderId={folder.id}
+                onUpdateClicked={() => updateClicked(i)}
+              />
+            );
+          })}
 
-        {data.folder.documents.map((folder, i) => {
-          return <DocumentIcon key={folder.id} documentId={folder.id} />;
-        })}
+          {data.folder.documents.map((folder, i) => {
+            return <DocumentIcon key={folder.id} documentId={folder.id} />;
+          })}
+        </div>
+        {data.folder.parentFolder &&
+        data.folder.objectAccessControl.editable ? (
+          <FolderPermissions
+            objectAccessControlId={data.folder.objectAccessControl.id}
+            worldId={params.worldId!}
+          ></FolderPermissions>
+        ) : (
+          <div></div>
+        )}
       </div>
-      {data.folder.parentFolder ? (
-        <FolderPermissions
-          folderId={params.folderId!}
-          worldId={params.worldId!}
-        ></FolderPermissions>
-      ) : null}
       {createFolderModal ? (
         <ModalComponent
           close={() => {

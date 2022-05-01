@@ -1,5 +1,5 @@
 .fields {
-  padding: 1em 2em;
+  padding: 0.5em;
 }
 
 .form-container {
@@ -13,7 +13,6 @@
 }
 
 form {
-  padding: 1em;
   background-color: var(--color-background-mute);
   width: calc(100%);
 }
@@ -32,7 +31,7 @@ form {
 .input-container {
   gap: 1em;
   display: grid;
-  grid-template-columns: 10ch 3fr;
+  grid-template-columns: 7ch 3fr;
   width: 100%;
   justify-items: right;
 }
@@ -49,6 +48,8 @@ form {
   background-color: var(--color-background);
   padding: 0 0.5em;
   width: fit-content;
+  display: flex;
+  align-items: center;
 }
 .dropdown-panel {
   position: absolute;
@@ -56,7 +57,7 @@ form {
   left: 0;
   z-index: 1;
   background-color: var(--color-background);
-  padding: 0.25em 0.5em;
+  padding: 0em 0em;
 }
 .selected {
   background-color: var(--color-background-soft);

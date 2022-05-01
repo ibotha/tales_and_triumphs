@@ -42,9 +42,7 @@ const Invite: FunctionComponent<Props> = ({}) => {
       worldId: params.worldId!,
       level: s.level.length > 0 ? s.level : null,
     })
-      .then((e) => {
-        console.log(e);
-      })
+      .then((e) => {})
       .catch((err) => console.log(err));
   };
 

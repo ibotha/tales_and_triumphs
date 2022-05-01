@@ -16,31 +16,34 @@ const SideHeader: FunctionComponent<Props> = ({
   children,
 }) => {
   let [showDropdown, setShowDropdown] = useState(false);
+  let [collapsed, setCollapsed] = useState(false);
   return (
     <div
-      className="side-header-container"
-      style={{ gridTemplateColumns: "1fr 1px " + rightFraction }}
+      className={`side-header-container ${collapsed ? "collapsed" : ""}`}
+      style={{ "--right-fraction": rightFraction } as React.CSSProperties}
     >
       <header className={vCentered ? "flex" : ""}>
         {header}
-        {/* {!!dropdown ? (
-        ) : null} */}
-        <div className="side-dropdown">
-          <hr style={{ marginTop: "1em" }} />
-          <div
-            className={"dropdown-content " + (!showDropdown ? "hidden" : "")}
-          >
-            {dropdown}
+        {!!dropdown ? (
+          <div className="side-dropdown">
+            <hr style={{ marginTop: "1em" }} />
+            <div
+              className={"dropdown-content " + (!showDropdown ? "hidden" : "")}
+            >
+              {dropdown}
+            </div>
+            <div
+              className="dropdown-toggle"
+              onClick={() => setShowDropdown(!showDropdown)}
+            >
+              Menu
+            </div>
           </div>
-          <div
-            className="dropdown-toggle"
-            onClick={() => setShowDropdown(!showDropdown)}
-          >
-            Menu
-          </div>
-        </div>
+        ) : null}
       </header>
-      <hr />
+      <div className="divider" onClick={() => setCollapsed(!collapsed)}>
+        {collapsed ? ">" : "<"}
+      </div>
       <main className={vCentered ? "flex" : ""}>{children}</main>
     </div>
   );

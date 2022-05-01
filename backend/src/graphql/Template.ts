@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import {
   mutationField,
   nonNull,
@@ -7,12 +6,11 @@ import {
   stringArg,
 } from "nexus";
 import {
-  getUserAccessLevelOnDocumentTemplate,
-  roleLevels,
-  userCanAccessDocumentTemplate,
+  getUserAccessLevelOnObjectAccessControl,
   userHasWorldRole,
 } from "../Auth/worldAuth";
-import { generateSelect } from "../Util/select";
+import { eObjectPermission, eObjectTypes, eWorldRole } from "../types";
+import { generateSelection } from "../Util/select";
 
 export const DocumentTemplate = objectType({
   name: "DocumentTemplate",
@@ -20,13 +18,8 @@ export const DocumentTemplate = objectType({
     t.nonNull.id("id");
     t.nonNull.string("name");
     t.nonNull.string("content");
-    t.nonNull.boolean("editable", {
-      resolve: async (parent, _, context) => {
-        return (
-          (await getUserAccessLevelOnDocumentTemplate(parent.id, context)) ===
-          "WRITE"
-        );
-      },
+    t.nonNull.field("objectAccessControl", {
+      type: "ObjectAccessControl",
     });
   },
 });
@@ -40,11 +33,9 @@ export const documentTemplateMutation = mutationField((t) => {
       worldId: nonNull(stringArg()),
     },
     async resolve(parent, { name, content, worldId }, context, info) {
-      let select = generateSelect<Prisma.DocumentTemplateSelect>()(info, {
-        id: true,
-      });
+      const select = generateSelection<"Template">(info);
       if (
-        !(await userHasWorldRole(worldId, Math.min(roleLevels.USER), context))
+        !(await userHasWorldRole(worldId, Math.min(eWorldRole.USER), context))
       ) {
         throw Error("You do not have the right permissions!");
       }
@@ -57,11 +48,17 @@ export const documentTemplateMutation = mutationField((t) => {
         data: {
           name,
           content,
-          worldId,
-          creatorId: role?.userId,
-          edit: {
-            connect: {
-              id: role?.userId,
+          world: { connect: { id: worldId } },
+          objectAccessControl: {
+            create: {
+              type: eObjectTypes.DocumentTemplate,
+              creator: { connect: { id: role?.userId } },
+              world: { connect: { id: worldId } },
+              edit: {
+                connect: {
+                  id: role?.userId,
+                },
+              },
             },
           },
         },
@@ -79,10 +76,17 @@ export const documentTemplateMutation = mutationField((t) => {
       name: stringArg(),
     },
     resolve: async (parent, { id, content, name }, context, info) => {
-      let select = generateSelect<Prisma.DocumentTemplateSelect>()(info, {
-        id: true,
+      const select = generateSelection<"Template">(info);
+      const template = await context.prisma.documentTemplate.findUnique({
+        where: { id: id },
+        include: { objectAccessControl: true },
       });
-      let authRes = await userCanAccessDocumentTemplate(id, "WRITE", context);
+      if (!template) throw new Error("No template found!");
+      let authRes =
+        (await getUserAccessLevelOnObjectAccessControl(
+          template.objectAccessControlId,
+          context
+        )) === eObjectPermission.WRITE;
       if (authRes !== true) return null;
       let ret = await context.prisma.documentTemplate.update({
         where: { id },
@@ -99,7 +103,16 @@ export const documentTemplateMutation = mutationField((t) => {
       id: nonNull(stringArg()),
     },
     resolve: async (parent, { id }, context) => {
-      let authRes = await userCanAccessDocumentTemplate(id, "WRITE", context);
+      const template = await context.prisma.documentTemplate.findUnique({
+        where: { id: id },
+        include: { objectAccessControl: true },
+      });
+      if (!template) throw new Error("No template found!");
+      let authRes =
+        (await getUserAccessLevelOnObjectAccessControl(
+          template.objectAccessControlId,
+          context
+        )) === eObjectPermission.WRITE;
       if (authRes !== true) return null;
       let ret = await context.prisma.documentTemplate.delete({
         where: { id },
@@ -117,11 +130,19 @@ export const documentTemplateQuery = queryField((t) => {
       id: nonNull(stringArg()),
     },
     resolve: async (parent, { id }, context, info) => {
-      let select = generateSelect<Prisma.DocumentTemplateSelect>()(info, {
-        id: true,
+      const select = generateSelection<"Template">(info);
+      const template = await context.prisma.documentTemplate.findUnique({
+        where: { id: id },
+        include: { objectAccessControl: true },
       });
-      let authRes = await userCanAccessDocumentTemplate(id, "READ", context);
-      if (authRes !== true) return null;
+      if (!template) throw new Error("No template found!");
+      if (
+        (await getUserAccessLevelOnObjectAccessControl(
+          template.objectAccessControlId,
+          context
+        )) > eObjectPermission.READ
+      )
+        return null;
       return context.prisma.documentTemplate.findUnique({
         where: { id },
         ...select,
@@ -135,9 +156,7 @@ export const documentTemplateQuery = queryField((t) => {
       worldId: nonNull(stringArg()),
     },
     resolve(parent, { worldId }, context, info) {
-      let select = generateSelect<Prisma.DocumentTemplateSelect>()(info, {
-        id: true,
-      });
+      const select = generateSelection<"Template">(info);
       return context.prisma.documentTemplate.findMany({
         where: { worldId },
         ...select,

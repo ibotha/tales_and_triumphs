@@ -18,7 +18,9 @@ query World($id: String!) {
 }
 
 mutation DeleteWorld($worldId: String!) {
-  deleteWorld(id: $worldId)
+  deleteWorld(id: $worldId) {
+    id
+  }
 }
 
 query MyWorlds {

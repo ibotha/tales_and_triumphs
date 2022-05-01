@@ -4,9 +4,21 @@ import * as types from "./graphql";
 import * as path from "path";
 import { PrismaSelect } from "@paljs/plugins";
 import { getNexusNamedType } from "nexus/dist/utils";
-
+import { NexusPlugin } from "nexus/dist/plugin";
+export const graphQLTypeMap: any = {};
 export const schema = makeSchema({
   types,
+  plugins: [
+    new NexusPlugin({
+      name: "TypeMapGenerator",
+      onAddOutputField(f) {
+        if (!(f.parentType in graphQLTypeMap))
+          graphQLTypeMap[f.parentType] = {};
+        graphQLTypeMap[f.parentType][f.name] = f.type;
+        return f;
+      },
+    }),
+  ],
   sourceTypes: {
     modules: [
       {

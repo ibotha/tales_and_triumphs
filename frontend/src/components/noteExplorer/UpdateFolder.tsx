@@ -40,7 +40,6 @@ const UpdateFolder: FunctionComponent<Props> = ({ folder, onSuccess }) => {
   );
 
   const submit = (s: any) => {
-    console.log(s);
     updateFolder({
       name: s.name,
       id: folder.id,

@@ -19,14 +19,6 @@ query Folder($id: String!) {
     id
     name
     colour
-    edit {
-      id
-    }
-    readOnly {
-      id
-    }
-    readAccessLevel
-    writeAccessLevel
     parentFolder {
       id
     }
@@ -39,33 +31,9 @@ query Folder($id: String!) {
       name
       colour
     }
-    editable
-  }
-}
-
-query FolderPermissions($id: String!, $worldId: String!) {
-  folder(id: $id) {
-    id
-    editable
-    edit {
+    objectAccessControl {
+      editable
       id
-      username
-    }
-    readOnly {
-      id
-      username
-    }
-    readAccessLevel
-    writeAccessLevel
-  }
-  world(id: $worldId) {
-    id
-    roles {
-      id
-      user {
-        id
-        username
-      }
     }
   }
 }

@@ -4,8 +4,13 @@ fragment BasicDocument on Document {
   parentFolder {
     id
   }
-  editable
-  content
+  objectAccessControl {
+    editable
+    id
+  }
+  sections {
+    id
+  }
   world {
     id
   }
@@ -16,29 +21,16 @@ query Document($id: String!) {
   }
 }
 
-query DocumentPermissions($id: String!, $worldId: String!) {
-  document(id: $id) {
+query DocumentSection($id: String!) {
+  documentSection(id: $id) {
     id
-    editable
-    edit {
+    type
+    name
+    textSection {
       id
-      username
     }
-    readOnly {
+    objectAccessControl {
       id
-      username
-    }
-    readAccessLevel
-    writeAccessLevel
-  }
-  world(id: $worldId) {
-    id
-    roles {
-      id
-      user {
-        id
-        username
-      }
     }
   }
 }

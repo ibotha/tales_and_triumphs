@@ -1,17 +1,9 @@
-import { PrismaSelect } from "@paljs/plugins";
 import { hash, verify } from "argon2";
-import {
-  objectType,
-  nonNull,
-  stringArg,
-  mutationField,
-  queryField,
-} from "nexus";
+import { objectType, stringArg, mutationField, queryField } from "nexus";
 import { ValidationError } from "yup";
 import { updateUserSchema } from "../Validation/userValidation";
 import { generateErrorType } from "./Errors";
-import { Prisma, User as UserType, World as WorldType } from "@prisma/client";
-import { generateSelect } from "../Util/select";
+import { generateSelection } from "../Util/select";
 
 export const User = objectType({
   name: "User",
@@ -39,9 +31,7 @@ export const userQuery = queryField((t) => {
   t.nonNull.list.nonNull.field("users", {
     type: "User",
     async resolve(parent, args, context, info) {
-      let select = generateSelect<Prisma.UserSelect>()(info, {
-        id: true,
-      });
+      const select = generateSelection<"User">(info);
       let user = await context.prisma.user.findMany({ ...select });
       return user;
     },
@@ -50,9 +40,7 @@ export const userQuery = queryField((t) => {
   t.field("me", {
     type: "User",
     resolve(parent, _, context, info) {
-      let select = generateSelect<Prisma.UserSelect>()(info, {
-        id: true,
-      });
+      const select = generateSelection<"User">(info);
       if (!context.req.session.user) return null;
       return context.prisma.user.findUnique({
         where: { id: context.req.session.user.id },
@@ -72,6 +60,7 @@ export const userMutation = mutationField((t) => {
     },
     resolve: async (parent, args, context, info) => {
       if (!context.req.session.user) return { errors: ["Must be logged in!"] };
+      const select = generateSelection<"User">(info, "data");
 
       // Validate against update Schema
       try {
@@ -102,7 +91,6 @@ export const userMutation = mutationField((t) => {
       }
 
       // Update the user and return the changes
-      let select = new PrismaSelect(info).valueOf("data") as Prisma.UserSelect;
       let user = await context.prisma.user.update({
         where: { id: context.req.session.user.id },
         data: {
@@ -111,7 +99,7 @@ export const userMutation = mutationField((t) => {
             : undefined,
           username: args.username || undefined,
         },
-        select,
+        ...select,
       });
       return { data: user };
     },

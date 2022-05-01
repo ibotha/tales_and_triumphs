@@ -25,17 +25,13 @@ export type AssignmentPayload = {
 export type Document = {
   __typename?: 'Document';
   category?: Maybe<DocumentCategory>;
-  content: Scalars['String'];
   creator?: Maybe<User>;
-  edit: Array<User>;
-  editable: Scalars['Boolean'];
   id: Scalars['ID'];
   name: Scalars['String'];
+  objectAccessControl: ObjectAccessControl;
   parentFolder?: Maybe<Folder>;
-  readAccessLevel: RoleLevel;
-  readOnly: Array<User>;
+  sections: Array<DocumentSection>;
   world: World;
-  writeAccessLevel: RoleLevel;
 };
 
 export type DocumentCategory = {
@@ -50,12 +46,22 @@ export type DocumentCategory = {
   worldId: Scalars['ID'];
 };
 
+export type DocumentSection = {
+  __typename?: 'DocumentSection';
+  document: Document;
+  id: Scalars['ID'];
+  name?: Maybe<Scalars['String']>;
+  objectAccessControl: ObjectAccessControl;
+  textSection?: Maybe<TextSection>;
+  type?: Maybe<SectionType>;
+};
+
 export type DocumentTemplate = {
   __typename?: 'DocumentTemplate';
   content: Scalars['String'];
-  editable: Scalars['Boolean'];
   id: Scalars['ID'];
   name: Scalars['String'];
+  objectAccessControl: ObjectAccessControl;
 };
 
 export type DocumentWrapper = {
@@ -76,18 +82,14 @@ export type Folder = {
   colour: Scalars['String'];
   creator?: Maybe<User>;
   documents: Array<Document>;
-  edit: Array<User>;
-  editable: Scalars['Boolean'];
   id: Scalars['ID'];
   name: Scalars['String'];
+  objectAccessControl: ObjectAccessControl;
   parentFolder?: Maybe<Folder>;
   parentFolderId?: Maybe<Scalars['String']>;
-  readAccessLevel: RoleLevel;
-  readOnly: Array<User>;
   subfolders: Array<Folder>;
   world: World;
   worldId?: Maybe<Scalars['String']>;
-  writeAccessLevel: RoleLevel;
 };
 
 export type FolderWrapper = {
@@ -103,17 +105,23 @@ export type Mutation = {
   createDocument?: Maybe<DocumentWrapper>;
   createDocumentTemplate?: Maybe<DocumentTemplate>;
   createFolder?: Maybe<FolderWrapper>;
+  createTextSection?: Maybe<TextSection>;
   createWorld?: Maybe<WorldWrapper>;
-  deleteDocument?: Maybe<Scalars['Boolean']>;
+  deleteDocument?: Maybe<Document>;
+  deleteDocumentSection?: Maybe<DocumentSection>;
   deleteDocumentTemplate?: Maybe<Scalars['Boolean']>;
   deleteFolder?: Maybe<Folder>;
-  deleteWorld?: Maybe<Scalars['Boolean']>;
+  deleteWorld?: Maybe<World>;
   login?: Maybe<UserPayload>;
   logout?: Maybe<Scalars['Boolean']>;
+  reOrderSection?: Maybe<DocumentSection>;
   register?: Maybe<UserPayload>;
+  updateAccessControl?: Maybe<ObjectAccessControl>;
   updateDocument?: Maybe<Document>;
+  updateDocumentSection?: Maybe<DocumentSection>;
   updateDocumentTemplate?: Maybe<DocumentTemplate>;
   updateFolder?: Maybe<Folder>;
+  updateTextSection?: Maybe<TextSection>;
   updateUser?: Maybe<UserPayload>;
 };
 
@@ -128,7 +136,6 @@ export type MutationAssignWorldRoleArgs = {
 
 export type MutationCreateDocumentArgs = {
   categoryId?: InputMaybe<Scalars['String']>;
-  content?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   parentFolderId?: InputMaybe<Scalars['String']>;
   worldId: Scalars['String'];
@@ -150,6 +157,11 @@ export type MutationCreateFolderArgs = {
 };
 
 
+export type MutationCreateTextSectionArgs = {
+  documentId: Scalars['String'];
+};
+
+
 export type MutationCreateWorldArgs = {
   name: Scalars['String'];
 };
@@ -157,6 +169,11 @@ export type MutationCreateWorldArgs = {
 
 export type MutationDeleteDocumentArgs = {
   id: Scalars['String'];
+};
+
+
+export type MutationDeleteDocumentSectionArgs = {
+  sectionId: Scalars['String'];
 };
 
 
@@ -181,6 +198,12 @@ export type MutationLoginArgs = {
 };
 
 
+export type MutationReOrderSectionArgs = {
+  index: Scalars['Int'];
+  sectionId: Scalars['String'];
+};
+
+
 export type MutationRegisterArgs = {
   email: Scalars['String'];
   password: Scalars['String'];
@@ -188,17 +211,27 @@ export type MutationRegisterArgs = {
 };
 
 
-export type MutationUpdateDocumentArgs = {
-  categoryId?: InputMaybe<Scalars['String']>;
-  content?: InputMaybe<Scalars['String']>;
+export type MutationUpdateAccessControlArgs = {
   id: Scalars['String'];
-  name?: InputMaybe<Scalars['String']>;
   newEditorUsers?: InputMaybe<Array<Scalars['String']>>;
   newReadOnlyUsers?: InputMaybe<Array<Scalars['String']>>;
-  parentFolderId?: InputMaybe<Scalars['String']>;
   readAccessLevel?: InputMaybe<RoleLevel>;
   revokeUsers?: InputMaybe<Array<Scalars['String']>>;
   writeAccessLevel?: InputMaybe<RoleLevel>;
+};
+
+
+export type MutationUpdateDocumentArgs = {
+  categoryId?: InputMaybe<Scalars['String']>;
+  id: Scalars['String'];
+  name?: InputMaybe<Scalars['String']>;
+  parentFolderId?: InputMaybe<Scalars['String']>;
+};
+
+
+export type MutationUpdateDocumentSectionArgs = {
+  id: Scalars['String'];
+  name: Scalars['String'];
 };
 
 
@@ -213,12 +246,13 @@ export type MutationUpdateFolderArgs = {
   colour?: InputMaybe<Scalars['String']>;
   id: Scalars['String'];
   name?: InputMaybe<Scalars['String']>;
-  newEditorUsers?: InputMaybe<Array<Scalars['String']>>;
-  newReadOnlyUsers?: InputMaybe<Array<Scalars['String']>>;
   parentFolderId?: InputMaybe<Scalars['String']>;
-  readAccessLevel?: InputMaybe<RoleLevel>;
-  revokeUsers?: InputMaybe<Array<Scalars['String']>>;
-  writeAccessLevel?: InputMaybe<RoleLevel>;
+};
+
+
+export type MutationUpdateTextSectionArgs = {
+  content?: InputMaybe<Scalars['String']>;
+  id: Scalars['String'];
 };
 
 
@@ -227,6 +261,23 @@ export type MutationUpdateUserArgs = {
   password?: InputMaybe<Scalars['String']>;
   username?: InputMaybe<Scalars['String']>;
 };
+
+export type ObjectAccessControl = {
+  __typename?: 'ObjectAccessControl';
+  edit: Array<User>;
+  editable: Scalars['Boolean'];
+  id: Scalars['ID'];
+  readAccessLevel: RoleLevel;
+  readOnly: Array<User>;
+  writeAccessLevel: RoleLevel;
+};
+
+export enum ObjectType {
+  Document = 'Document',
+  DocumentTemplate = 'DocumentTemplate',
+  Folder = 'Folder',
+  Section = 'Section'
+}
 
 export type PermissionItem = {
   __typename?: 'PermissionItem';
@@ -257,6 +308,7 @@ export type Query = {
   __typename?: 'Query';
   document?: Maybe<Document>;
   documentCategories: Array<DocumentCategory>;
+  documentSection?: Maybe<DocumentSection>;
   documentTemplate?: Maybe<DocumentTemplate>;
   documentTemplates: Array<DocumentTemplate>;
   documents: Array<Document>;
@@ -264,6 +316,8 @@ export type Query = {
   folders: Array<Folder>;
   me?: Maybe<User>;
   myWorlds?: Maybe<Array<World>>;
+  objectAccessControl?: Maybe<ObjectAccessControl>;
+  textSection?: Maybe<TextSection>;
   users: Array<User>;
   world?: Maybe<World>;
   worlds: Array<World>;
@@ -277,6 +331,11 @@ export type QueryDocumentArgs = {
 
 export type QueryDocumentCategoriesArgs = {
   worldId: Scalars['String'];
+};
+
+
+export type QueryDocumentSectionArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -296,13 +355,22 @@ export type QueryDocumentsArgs = {
 
 
 export type QueryFolderArgs = {
-  id?: InputMaybe<Scalars['String']>;
-  worldId?: InputMaybe<Scalars['String']>;
+  id: Scalars['String'];
 };
 
 
 export type QueryFoldersArgs = {
   worldId: Scalars['String'];
+};
+
+
+export type QueryObjectAccessControlArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryTextSectionArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -316,6 +384,17 @@ export enum RoleLevel {
   Trusted = 'TRUSTED',
   User = 'USER'
 }
+
+export enum SectionType {
+  Text = 'Text'
+}
+
+export type TextSection = {
+  __typename?: 'TextSection';
+  content: Scalars['String'];
+  id: Scalars['ID'];
+  section: DocumentSection;
+};
 
 export type User = {
   __typename?: 'User';
@@ -352,7 +431,6 @@ export type UserPermissionInput = {
 export type World = {
   __typename?: 'World';
   categories: Array<DocumentCategory>;
-  creator: User;
   documents: Array<Document>;
   id: Scalars['ID'];
   myRole?: Maybe<RoleLevel>;
@@ -420,44 +498,37 @@ export type DeleteDocumentMutationVariables = Exact<{
 }>;
 
 
-export type DeleteDocumentMutation = { __typename?: 'Mutation', deleteDocument?: boolean | null };
+export type DeleteDocumentMutation = { __typename?: 'Mutation', deleteDocument?: { __typename?: 'Document', id: string } | null };
 
-export type UpdateDocumentMutationVariables = Exact<{
-  id: Scalars['String'];
-  content?: InputMaybe<Scalars['String']>;
+export type CreateTextSectionMutationVariables = Exact<{
+  documentId: Scalars['String'];
 }>;
 
 
-export type UpdateDocumentMutation = { __typename?: 'Mutation', updateDocument?: { __typename?: 'Document', id: string, content: string } | null };
+export type CreateTextSectionMutation = { __typename?: 'Mutation', createTextSection?: { __typename?: 'TextSection', id: string, section: { __typename?: 'DocumentSection', id: string, document: { __typename?: 'Document', id: string, sections: Array<{ __typename?: 'DocumentSection', id: string }> } } } | null };
 
-export type UpdateDocumentPermissionsMutationVariables = Exact<{
-  id: Scalars['String'];
-  writeAccessLevel?: InputMaybe<RoleLevel>;
-  readAccessLevel?: InputMaybe<RoleLevel>;
-  newEditorUsers?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
-  newReadOnlyUsers?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
-  revokeUsers?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
+export type DeleteDocumentSectionMutationVariables = Exact<{
+  sectionId: Scalars['String'];
 }>;
 
 
-export type UpdateDocumentPermissionsMutation = { __typename?: 'Mutation', updateDocument?: { __typename?: 'Document', id: string, writeAccessLevel: RoleLevel, readAccessLevel: RoleLevel, edit: Array<{ __typename?: 'User', id: string, username: string }>, readOnly: Array<{ __typename?: 'User', id: string, username: string }> } | null };
+export type DeleteDocumentSectionMutation = { __typename?: 'Mutation', deleteDocumentSection?: { __typename?: 'DocumentSection', id: string, document: { __typename?: 'Document', id: string, sections: Array<{ __typename?: 'DocumentSection', id: string }> } } | null };
 
-export type BasicDocumentFragment = { __typename?: 'Document', id: string, name: string, editable: boolean, content: string, parentFolder?: { __typename?: 'Folder', id: string } | null, world: { __typename?: 'World', id: string } };
+export type BasicDocumentFragment = { __typename?: 'Document', id: string, name: string, parentFolder?: { __typename?: 'Folder', id: string } | null, objectAccessControl: { __typename?: 'ObjectAccessControl', editable: boolean, id: string }, sections: Array<{ __typename?: 'DocumentSection', id: string }>, world: { __typename?: 'World', id: string } };
 
 export type DocumentQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
 
 
-export type DocumentQuery = { __typename?: 'Query', document?: { __typename?: 'Document', id: string, name: string, editable: boolean, content: string, parentFolder?: { __typename?: 'Folder', id: string } | null, world: { __typename?: 'World', id: string } } | null };
+export type DocumentQuery = { __typename?: 'Query', document?: { __typename?: 'Document', id: string, name: string, parentFolder?: { __typename?: 'Folder', id: string } | null, objectAccessControl: { __typename?: 'ObjectAccessControl', editable: boolean, id: string }, sections: Array<{ __typename?: 'DocumentSection', id: string }>, world: { __typename?: 'World', id: string } } | null };
 
-export type DocumentPermissionsQueryVariables = Exact<{
+export type DocumentSectionQueryVariables = Exact<{
   id: Scalars['String'];
-  worldId: Scalars['String'];
 }>;
 
 
-export type DocumentPermissionsQuery = { __typename?: 'Query', document?: { __typename?: 'Document', id: string, editable: boolean, readAccessLevel: RoleLevel, writeAccessLevel: RoleLevel, edit: Array<{ __typename?: 'User', id: string, username: string }>, readOnly: Array<{ __typename?: 'User', id: string, username: string }> } | null, world?: { __typename?: 'World', id: string, roles: Array<{ __typename?: 'WorldRole', id: string, user: { __typename?: 'User', id: string, username: string } }> } | null };
+export type DocumentSectionQuery = { __typename?: 'Query', documentSection?: { __typename?: 'DocumentSection', id: string, type?: SectionType | null, name?: string | null, textSection?: { __typename?: 'TextSection', id: string } | null, objectAccessControl: { __typename?: 'ObjectAccessControl', id: string } } | null };
 
 export type MoveFolderMutationVariables = Exact<{
   folderId: Scalars['String'];
@@ -473,18 +544,6 @@ export type DeleteFolderMutationVariables = Exact<{
 
 
 export type DeleteFolderMutation = { __typename?: 'Mutation', deleteFolder?: { __typename?: 'Folder', id: string, parentFolder?: { __typename?: 'Folder', id: string } | null } | null };
-
-export type UpdateFolderPermissionsMutationVariables = Exact<{
-  id: Scalars['String'];
-  writeAccessLevel?: InputMaybe<RoleLevel>;
-  readAccessLevel?: InputMaybe<RoleLevel>;
-  newEditorUsers?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
-  newReadOnlyUsers?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
-  revokeUsers?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
-}>;
-
-
-export type UpdateFolderPermissionsMutation = { __typename?: 'Mutation', updateFolder?: { __typename?: 'Folder', id: string, writeAccessLevel: RoleLevel, readAccessLevel: RoleLevel, edit: Array<{ __typename?: 'User', id: string, username: string }>, readOnly: Array<{ __typename?: 'User', id: string, username: string }> } | null };
 
 export type CreateFolderMutationVariables = Exact<{
   name: Scalars['String'];
@@ -516,15 +575,7 @@ export type FolderQueryVariables = Exact<{
 }>;
 
 
-export type FolderQuery = { __typename?: 'Query', folder?: { __typename?: 'Folder', id: string, name: string, colour: string, readAccessLevel: RoleLevel, writeAccessLevel: RoleLevel, editable: boolean, edit: Array<{ __typename?: 'User', id: string }>, readOnly: Array<{ __typename?: 'User', id: string }>, parentFolder?: { __typename?: 'Folder', id: string } | null, documents: Array<{ __typename?: 'Document', id: string, name: string }>, subfolders: Array<{ __typename?: 'Folder', id: string, name: string, colour: string }> } | null };
-
-export type FolderPermissionsQueryVariables = Exact<{
-  id: Scalars['String'];
-  worldId: Scalars['String'];
-}>;
-
-
-export type FolderPermissionsQuery = { __typename?: 'Query', folder?: { __typename?: 'Folder', id: string, editable: boolean, readAccessLevel: RoleLevel, writeAccessLevel: RoleLevel, edit: Array<{ __typename?: 'User', id: string, username: string }>, readOnly: Array<{ __typename?: 'User', id: string, username: string }> } | null, world?: { __typename?: 'World', id: string, roles: Array<{ __typename?: 'WorldRole', id: string, user: { __typename?: 'User', id: string, username: string } }> } | null };
+export type FolderQuery = { __typename?: 'Query', folder?: { __typename?: 'Folder', id: string, name: string, colour: string, parentFolder?: { __typename?: 'Folder', id: string } | null, documents: Array<{ __typename?: 'Document', id: string, name: string }>, subfolders: Array<{ __typename?: 'Folder', id: string, name: string, colour: string }>, objectAccessControl: { __typename?: 'ObjectAccessControl', editable: boolean, id: string } } | null };
 
 export type AssignUserRoleMutationVariables = Exact<{
   email: Scalars['String'];
@@ -535,12 +586,47 @@ export type AssignUserRoleMutationVariables = Exact<{
 
 export type AssignUserRoleMutation = { __typename?: 'Mutation', assignWorldRole?: { __typename?: 'AssignmentPayload', errors?: Array<string> | null, data?: { __typename?: 'WorldRole', id: string, level: RoleLevel } | null, fieldErrors?: Array<{ __typename?: 'FieldErrorItem', field: string, message: string }> | null } | null };
 
+export type UpdatePermissionsMutationVariables = Exact<{
+  objectAccessControlId: Scalars['String'];
+  writeAccessLevel?: InputMaybe<RoleLevel>;
+  readAccessLevel?: InputMaybe<RoleLevel>;
+  newEditorUsers?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
+  newReadOnlyUsers?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
+  revokeUsers?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
+}>;
+
+
+export type UpdatePermissionsMutation = { __typename?: 'Mutation', updateAccessControl?: { __typename?: 'ObjectAccessControl', id: string, writeAccessLevel: RoleLevel, readAccessLevel: RoleLevel, edit: Array<{ __typename?: 'User', id: string, username: string }>, readOnly: Array<{ __typename?: 'User', id: string, username: string }> } | null };
+
+export type PermissionsQueryVariables = Exact<{
+  objectAccessControlId: Scalars['String'];
+  worldId: Scalars['String'];
+}>;
+
+
+export type PermissionsQuery = { __typename?: 'Query', objectAccessControl?: { __typename?: 'ObjectAccessControl', id: string, writeAccessLevel: RoleLevel, readAccessLevel: RoleLevel, editable: boolean, edit: Array<{ __typename?: 'User', id: string, username: string }>, readOnly: Array<{ __typename?: 'User', id: string, username: string }> } | null, world?: { __typename?: 'World', id: string, roles: Array<{ __typename?: 'WorldRole', id: string, user: { __typename?: 'User', id: string, username: string } }> } | null };
+
 export type RootFolderQueryVariables = Exact<{
   worldId: Scalars['String'];
 }>;
 
 
 export type RootFolderQuery = { __typename?: 'Query', world?: { __typename?: 'World', id: string, rootFolder?: { __typename?: 'Folder', id: string } | null } | null };
+
+export type TextSectionQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type TextSectionQuery = { __typename?: 'Query', textSection?: { __typename?: 'TextSection', id: string, content: string } | null };
+
+export type UpdateTextSectionMutationVariables = Exact<{
+  id: Scalars['String'];
+  content?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type UpdateTextSectionMutation = { __typename?: 'Mutation', updateTextSection?: { __typename?: 'TextSection', id: string, content: string } | null };
 
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -559,7 +645,7 @@ export type DeleteWorldMutationVariables = Exact<{
 }>;
 
 
-export type DeleteWorldMutation = { __typename?: 'Mutation', deleteWorld?: boolean | null };
+export type DeleteWorldMutation = { __typename?: 'Mutation', deleteWorld?: { __typename?: 'World', id: string } | null };
 
 export type MyWorldsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -580,8 +666,13 @@ export const BasicDocumentFragmentDoc = gql`
   parentFolder {
     id
   }
-  editable
-  content
+  objectAccessControl {
+    editable
+    id
+  }
+  sections {
+    id
+  }
   world {
     id
   }
@@ -665,52 +756,51 @@ export function useCreateDocumentMutation() {
 };
 export const DeleteDocumentDocument = gql`
     mutation DeleteDocument($id: String!) {
-  deleteDocument(id: $id)
+  deleteDocument(id: $id) {
+    id
+  }
 }
     `;
 
 export function useDeleteDocumentMutation() {
   return Urql.useMutation<DeleteDocumentMutation, DeleteDocumentMutationVariables>(DeleteDocumentDocument);
 };
-export const UpdateDocumentDocument = gql`
-    mutation UpdateDocument($id: String!, $content: String) {
-  updateDocument(id: $id, content: $content) {
+export const CreateTextSectionDocument = gql`
+    mutation CreateTextSection($documentId: String!) {
+  createTextSection(documentId: $documentId) {
     id
-    content
+    section {
+      id
+      document {
+        id
+        sections {
+          id
+        }
+      }
+    }
   }
 }
     `;
 
-export function useUpdateDocumentMutation() {
-  return Urql.useMutation<UpdateDocumentMutation, UpdateDocumentMutationVariables>(UpdateDocumentDocument);
+export function useCreateTextSectionMutation() {
+  return Urql.useMutation<CreateTextSectionMutation, CreateTextSectionMutationVariables>(CreateTextSectionDocument);
 };
-export const UpdateDocumentPermissionsDocument = gql`
-    mutation UpdateDocumentPermissions($id: String!, $writeAccessLevel: RoleLevel, $readAccessLevel: RoleLevel, $newEditorUsers: [String!], $newReadOnlyUsers: [String!], $revokeUsers: [String!]) {
-  updateDocument(
-    id: $id
-    writeAccessLevel: $writeAccessLevel
-    readAccessLevel: $readAccessLevel
-    newEditorUsers: $newEditorUsers
-    newReadOnlyUsers: $newReadOnlyUsers
-    revokeUsers: $revokeUsers
-  ) {
+export const DeleteDocumentSectionDocument = gql`
+    mutation DeleteDocumentSection($sectionId: String!) {
+  deleteDocumentSection(sectionId: $sectionId) {
     id
-    writeAccessLevel
-    readAccessLevel
-    edit {
+    document {
       id
-      username
-    }
-    readOnly {
-      id
-      username
+      sections {
+        id
+      }
     }
   }
 }
     `;
 
-export function useUpdateDocumentPermissionsMutation() {
-  return Urql.useMutation<UpdateDocumentPermissionsMutation, UpdateDocumentPermissionsMutationVariables>(UpdateDocumentPermissionsDocument);
+export function useDeleteDocumentSectionMutation() {
+  return Urql.useMutation<DeleteDocumentSectionMutation, DeleteDocumentSectionMutationVariables>(DeleteDocumentSectionDocument);
 };
 export const DocumentDocument = gql`
     query Document($id: String!) {
@@ -723,37 +813,24 @@ export const DocumentDocument = gql`
 export function useDocumentQuery(options: Omit<Urql.UseQueryArgs<DocumentQueryVariables>, 'query'>) {
   return Urql.useQuery<DocumentQuery>({ query: DocumentDocument, ...options });
 };
-export const DocumentPermissionsDocument = gql`
-    query DocumentPermissions($id: String!, $worldId: String!) {
-  document(id: $id) {
+export const DocumentSectionDocument = gql`
+    query DocumentSection($id: String!) {
+  documentSection(id: $id) {
     id
-    editable
-    edit {
+    type
+    name
+    textSection {
       id
-      username
     }
-    readOnly {
+    objectAccessControl {
       id
-      username
-    }
-    readAccessLevel
-    writeAccessLevel
-  }
-  world(id: $worldId) {
-    id
-    roles {
-      id
-      user {
-        id
-        username
-      }
     }
   }
 }
     `;
 
-export function useDocumentPermissionsQuery(options: Omit<Urql.UseQueryArgs<DocumentPermissionsQueryVariables>, 'query'>) {
-  return Urql.useQuery<DocumentPermissionsQuery>({ query: DocumentPermissionsDocument, ...options });
+export function useDocumentSectionQuery(options: Omit<Urql.UseQueryArgs<DocumentSectionQueryVariables>, 'query'>) {
+  return Urql.useQuery<DocumentSectionQuery>({ query: DocumentSectionDocument, ...options });
 };
 export const MoveFolderDocument = gql`
     mutation moveFolder($folderId: String!, $parentFolderId: String!) {
@@ -782,34 +859,6 @@ export const DeleteFolderDocument = gql`
 
 export function useDeleteFolderMutation() {
   return Urql.useMutation<DeleteFolderMutation, DeleteFolderMutationVariables>(DeleteFolderDocument);
-};
-export const UpdateFolderPermissionsDocument = gql`
-    mutation UpdateFolderPermissions($id: String!, $writeAccessLevel: RoleLevel, $readAccessLevel: RoleLevel, $newEditorUsers: [String!], $newReadOnlyUsers: [String!], $revokeUsers: [String!]) {
-  updateFolder(
-    id: $id
-    writeAccessLevel: $writeAccessLevel
-    readAccessLevel: $readAccessLevel
-    newEditorUsers: $newEditorUsers
-    newReadOnlyUsers: $newReadOnlyUsers
-    revokeUsers: $revokeUsers
-  ) {
-    id
-    writeAccessLevel
-    readAccessLevel
-    edit {
-      id
-      username
-    }
-    readOnly {
-      id
-      username
-    }
-  }
-}
-    `;
-
-export function useUpdateFolderPermissionsMutation() {
-  return Urql.useMutation<UpdateFolderPermissionsMutation, UpdateFolderPermissionsMutationVariables>(UpdateFolderPermissionsDocument);
 };
 export const CreateFolderDocument = gql`
     mutation CreateFolder($name: String!, $parentFolderId: String!, $worldId: String!) {
@@ -870,14 +919,6 @@ export const FolderDocument = gql`
     id
     name
     colour
-    edit {
-      id
-    }
-    readOnly {
-      id
-    }
-    readAccessLevel
-    writeAccessLevel
     parentFolder {
       id
     }
@@ -890,45 +931,16 @@ export const FolderDocument = gql`
       name
       colour
     }
-    editable
+    objectAccessControl {
+      editable
+      id
+    }
   }
 }
     `;
 
 export function useFolderQuery(options: Omit<Urql.UseQueryArgs<FolderQueryVariables>, 'query'>) {
   return Urql.useQuery<FolderQuery>({ query: FolderDocument, ...options });
-};
-export const FolderPermissionsDocument = gql`
-    query FolderPermissions($id: String!, $worldId: String!) {
-  folder(id: $id) {
-    id
-    editable
-    edit {
-      id
-      username
-    }
-    readOnly {
-      id
-      username
-    }
-    readAccessLevel
-    writeAccessLevel
-  }
-  world(id: $worldId) {
-    id
-    roles {
-      id
-      user {
-        id
-        username
-      }
-    }
-  }
-}
-    `;
-
-export function useFolderPermissionsQuery(options: Omit<Urql.UseQueryArgs<FolderPermissionsQueryVariables>, 'query'>) {
-  return Urql.useQuery<FolderPermissionsQuery>({ query: FolderPermissionsDocument, ...options });
 };
 export const AssignUserRoleDocument = gql`
     mutation AssignUserRole($email: String!, $worldId: String!, $level: RoleLevel) {
@@ -949,6 +961,66 @@ export const AssignUserRoleDocument = gql`
 export function useAssignUserRoleMutation() {
   return Urql.useMutation<AssignUserRoleMutation, AssignUserRoleMutationVariables>(AssignUserRoleDocument);
 };
+export const UpdatePermissionsDocument = gql`
+    mutation UpdatePermissions($objectAccessControlId: String!, $writeAccessLevel: RoleLevel, $readAccessLevel: RoleLevel, $newEditorUsers: [String!], $newReadOnlyUsers: [String!], $revokeUsers: [String!]) {
+  updateAccessControl(
+    id: $objectAccessControlId
+    writeAccessLevel: $writeAccessLevel
+    readAccessLevel: $readAccessLevel
+    newEditorUsers: $newEditorUsers
+    newReadOnlyUsers: $newReadOnlyUsers
+    revokeUsers: $revokeUsers
+  ) {
+    id
+    writeAccessLevel
+    readAccessLevel
+    edit {
+      id
+      username
+    }
+    readOnly {
+      id
+      username
+    }
+  }
+}
+    `;
+
+export function useUpdatePermissionsMutation() {
+  return Urql.useMutation<UpdatePermissionsMutation, UpdatePermissionsMutationVariables>(UpdatePermissionsDocument);
+};
+export const PermissionsDocument = gql`
+    query Permissions($objectAccessControlId: String!, $worldId: String!) {
+  objectAccessControl(id: $objectAccessControlId) {
+    id
+    writeAccessLevel
+    readAccessLevel
+    edit {
+      id
+      username
+    }
+    readOnly {
+      id
+      username
+    }
+    editable
+  }
+  world(id: $worldId) {
+    id
+    roles {
+      id
+      user {
+        id
+        username
+      }
+    }
+  }
+}
+    `;
+
+export function usePermissionsQuery(options: Omit<Urql.UseQueryArgs<PermissionsQueryVariables>, 'query'>) {
+  return Urql.useQuery<PermissionsQuery>({ query: PermissionsDocument, ...options });
+};
 export const RootFolderDocument = gql`
     query RootFolder($worldId: String!) {
   world(id: $worldId) {
@@ -962,6 +1034,30 @@ export const RootFolderDocument = gql`
 
 export function useRootFolderQuery(options: Omit<Urql.UseQueryArgs<RootFolderQueryVariables>, 'query'>) {
   return Urql.useQuery<RootFolderQuery>({ query: RootFolderDocument, ...options });
+};
+export const TextSectionDocument = gql`
+    query TextSection($id: String!) {
+  textSection(id: $id) {
+    id
+    content
+  }
+}
+    `;
+
+export function useTextSectionQuery(options: Omit<Urql.UseQueryArgs<TextSectionQueryVariables>, 'query'>) {
+  return Urql.useQuery<TextSectionQuery>({ query: TextSectionDocument, ...options });
+};
+export const UpdateTextSectionDocument = gql`
+    mutation UpdateTextSection($id: String!, $content: String) {
+  updateTextSection(content: $content, id: $id) {
+    id
+    content
+  }
+}
+    `;
+
+export function useUpdateTextSectionMutation() {
+  return Urql.useMutation<UpdateTextSectionMutation, UpdateTextSectionMutationVariables>(UpdateTextSectionDocument);
 };
 export const MeDocument = gql`
     query Me {
@@ -1001,7 +1097,9 @@ export function useWorldQuery(options: Omit<Urql.UseQueryArgs<WorldQueryVariable
 };
 export const DeleteWorldDocument = gql`
     mutation DeleteWorld($worldId: String!) {
-  deleteWorld(id: $worldId)
+  deleteWorld(id: $worldId) {
+    id
+  }
 }
     `;
 

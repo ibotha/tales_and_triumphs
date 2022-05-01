@@ -11,7 +11,7 @@ const DocumentIcon: FunctionComponent<Props> = ({ documentId }) => {
       id: documentId,
     },
   });
-
+  console.log(fetching, data, error, documentId);
   if (fetching) return <div>Loading...</div>;
   if (!data || !data.document || error)
     return <div>{JSON.stringify(error)}</div>;

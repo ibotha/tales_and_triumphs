@@ -15,8 +15,6 @@ const WorldSummaryBanner: FunctionComponent<Props> = ({ uuid }) => {
     },
   });
 
-  console.log(fetching, data);
-
   if (fetching) return <div>Loading...</div>;
   if (!data || !data.world || error) return <div>{JSON.stringify(error)}</div>;
   return (

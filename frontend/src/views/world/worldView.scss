@@ -5,3 +5,11 @@
   gap: 0.5em;
   margin-bottom: 1em;
 }
+
+.document-sections-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 0 0.5em;
+  overflow-y: auto;
+}

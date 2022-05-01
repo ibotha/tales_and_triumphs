@@ -39,7 +39,6 @@ const CreateFolder: FunctionComponent<Props> = ({
       worldId: worldId,
     })
       .then((e) => {
-        console.log(e);
         if (!e.data?.createFolder?.data) return;
         onSuccess();
       })

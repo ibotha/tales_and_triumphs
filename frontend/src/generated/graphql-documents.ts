@@ -6,8 +6,13 @@ export const basicDocument = gql`
   parentFolder {
     id
   }
-  editable
-  content
+  objectAccessControl {
+    editable
+    id
+  }
+  sections {
+    id
+  }
   world {
     id
   }
@@ -71,37 +76,36 @@ export const createDocument = gql`
     `;
 export const deleteDocument = gql`
     mutation DeleteDocument($id: String!) {
-  deleteDocument(id: $id)
-}
-    `;
-export const updateDocument = gql`
-    mutation UpdateDocument($id: String!, $content: String) {
-  updateDocument(id: $id, content: $content) {
+  deleteDocument(id: $id) {
     id
-    content
   }
 }
     `;
-export const updateDocumentPermissions = gql`
-    mutation UpdateDocumentPermissions($id: String!, $writeAccessLevel: RoleLevel, $readAccessLevel: RoleLevel, $newEditorUsers: [String!], $newReadOnlyUsers: [String!], $revokeUsers: [String!]) {
-  updateDocument(
-    id: $id
-    writeAccessLevel: $writeAccessLevel
-    readAccessLevel: $readAccessLevel
-    newEditorUsers: $newEditorUsers
-    newReadOnlyUsers: $newReadOnlyUsers
-    revokeUsers: $revokeUsers
-  ) {
+export const createTextSection = gql`
+    mutation CreateTextSection($documentId: String!) {
+  createTextSection(documentId: $documentId) {
     id
-    writeAccessLevel
-    readAccessLevel
-    edit {
+    section {
       id
-      username
+      document {
+        id
+        sections {
+          id
+        }
+      }
     }
-    readOnly {
+  }
+}
+    `;
+export const deleteDocumentSection = gql`
+    mutation DeleteDocumentSection($sectionId: String!) {
+  deleteDocumentSection(sectionId: $sectionId) {
+    id
+    document {
       id
-      username
+      sections {
+        id
+      }
     }
   }
 }
@@ -113,30 +117,17 @@ export const document = gql`
   }
 }
     ${basicDocument}`;
-export const documentPermissions = gql`
-    query DocumentPermissions($id: String!, $worldId: String!) {
-  document(id: $id) {
+export const documentSection = gql`
+    query DocumentSection($id: String!) {
+  documentSection(id: $id) {
     id
-    editable
-    edit {
+    type
+    name
+    textSection {
       id
-      username
     }
-    readOnly {
+    objectAccessControl {
       id
-      username
-    }
-    readAccessLevel
-    writeAccessLevel
-  }
-  world(id: $worldId) {
-    id
-    roles {
-      id
-      user {
-        id
-        username
-      }
     }
   }
 }
@@ -157,30 +148,6 @@ export const deleteFolder = gql`
     id
     parentFolder {
       id
-    }
-  }
-}
-    `;
-export const updateFolderPermissions = gql`
-    mutation UpdateFolderPermissions($id: String!, $writeAccessLevel: RoleLevel, $readAccessLevel: RoleLevel, $newEditorUsers: [String!], $newReadOnlyUsers: [String!], $revokeUsers: [String!]) {
-  updateFolder(
-    id: $id
-    writeAccessLevel: $writeAccessLevel
-    readAccessLevel: $readAccessLevel
-    newEditorUsers: $newEditorUsers
-    newReadOnlyUsers: $newReadOnlyUsers
-    revokeUsers: $revokeUsers
-  ) {
-    id
-    writeAccessLevel
-    readAccessLevel
-    edit {
-      id
-      username
-    }
-    readOnly {
-      id
-      username
     }
   }
 }
@@ -232,14 +199,6 @@ export const folder = gql`
     id
     name
     colour
-    edit {
-      id
-    }
-    readOnly {
-      id
-    }
-    readAccessLevel
-    writeAccessLevel
     parentFolder {
       id
     }
@@ -252,34 +211,9 @@ export const folder = gql`
       name
       colour
     }
-    editable
-  }
-}
-    `;
-export const folderPermissions = gql`
-    query FolderPermissions($id: String!, $worldId: String!) {
-  folder(id: $id) {
-    id
-    editable
-    edit {
+    objectAccessControl {
+      editable
       id
-      username
-    }
-    readOnly {
-      id
-      username
-    }
-    readAccessLevel
-    writeAccessLevel
-  }
-  world(id: $worldId) {
-    id
-    roles {
-      id
-      user {
-        id
-        username
-      }
     }
   }
 }
@@ -299,6 +233,58 @@ export const assignUserRole = gql`
   }
 }
     `;
+export const updatePermissions = gql`
+    mutation UpdatePermissions($objectAccessControlId: String!, $writeAccessLevel: RoleLevel, $readAccessLevel: RoleLevel, $newEditorUsers: [String!], $newReadOnlyUsers: [String!], $revokeUsers: [String!]) {
+  updateAccessControl(
+    id: $objectAccessControlId
+    writeAccessLevel: $writeAccessLevel
+    readAccessLevel: $readAccessLevel
+    newEditorUsers: $newEditorUsers
+    newReadOnlyUsers: $newReadOnlyUsers
+    revokeUsers: $revokeUsers
+  ) {
+    id
+    writeAccessLevel
+    readAccessLevel
+    edit {
+      id
+      username
+    }
+    readOnly {
+      id
+      username
+    }
+  }
+}
+    `;
+export const permissions = gql`
+    query Permissions($objectAccessControlId: String!, $worldId: String!) {
+  objectAccessControl(id: $objectAccessControlId) {
+    id
+    writeAccessLevel
+    readAccessLevel
+    edit {
+      id
+      username
+    }
+    readOnly {
+      id
+      username
+    }
+    editable
+  }
+  world(id: $worldId) {
+    id
+    roles {
+      id
+      user {
+        id
+        username
+      }
+    }
+  }
+}
+    `;
 export const rootFolder = gql`
     query RootFolder($worldId: String!) {
   world(id: $worldId) {
@@ -306,6 +292,22 @@ export const rootFolder = gql`
     rootFolder {
       id
     }
+  }
+}
+    `;
+export const textSection = gql`
+    query TextSection($id: String!) {
+  textSection(id: $id) {
+    id
+    content
+  }
+}
+    `;
+export const updateTextSection = gql`
+    mutation UpdateTextSection($id: String!, $content: String) {
+  updateTextSection(content: $content, id: $id) {
+    id
+    content
   }
 }
     `;
@@ -339,7 +341,9 @@ export const world = gql`
     `;
 export const deleteWorld = gql`
     mutation DeleteWorld($worldId: String!) {
-  deleteWorld(id: $worldId)
+  deleteWorld(id: $worldId) {
+    id
+  }
 }
     `;
 export const myWorlds = gql`

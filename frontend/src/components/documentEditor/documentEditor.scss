@@ -1,0 +1,27 @@
+.editor-container {
+  padding: 0 0.5em 0.5em 0.5em;
+  background-color: var(--color-background-mute);
+  text-align: start;
+  height: 100%;
+  font-family: Dosis;
+}
+
+.btn.active {
+  filter: brightness(1.2);
+}
+
+.editor-content {
+  background-color: var(--color-background-soft);
+}
+
+.editor-controls {
+  display: flex;
+  gap: 3px;
+}
+
+.section-container {
+  background-color: var(--color-background-mute);
+}
+
+.text-section-container {
+}

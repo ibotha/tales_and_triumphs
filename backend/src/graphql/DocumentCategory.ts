@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { nonNull, objectType, queryField, stringArg } from "nexus";
-import { roleLevels, userHasWorldRole } from "../Auth/worldAuth";
+import { userHasWorldRole } from "../Auth/worldAuth";
+import { eWorldRole } from "../types";
 import { generateSelect } from "../Util/select";
 
 export const DocumentCategory = objectType({
@@ -27,7 +28,7 @@ export const documentCategoryQuery = queryField((t) => {
       let select = generateSelect<Prisma.DocumentCategorySelect>()(info, {
         id: true,
       });
-      if (!(await userHasWorldRole(worldId, roleLevels.USER, context)))
+      if (!(await userHasWorldRole(worldId, eWorldRole.USER, context)))
         throw Error("You are not allowed to access this world.");
       let ret = await context.prisma.documentCategory.findMany({
         where: { worldId },

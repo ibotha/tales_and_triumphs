@@ -1,6 +1,7 @@
 import { FunctionComponent, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import DocumentPermissions from "../../components/documentEditor/DocumentPermissions";
+import "./worldView.scss";
+import Permissions from "../../components/noteExplorer/Permissions";
 import FolderTree, {
   ObjectBundle,
 } from "../../components/noteExplorer/FolderTree";
@@ -11,8 +12,9 @@ import {
   useDeleteDocumentMutation,
   useDocumentQuery,
   useMoveDocumentMutation,
-  useUpdateDocumentMutation,
 } from "../../generated/graphql-components";
+import CreateSection from "../../components/documentEditor/CreateSection";
+import Section from "../../components/documentEditor/Section";
 
 type Props = {};
 
@@ -28,13 +30,14 @@ const DocumentView: FunctionComponent<Props> = ({}) => {
     },
   });
 
-  const [, saveDocument] = useUpdateDocumentMutation();
+  // const [, saveDocument] = useUpdateDocumentMutation();
 
   let save = (content: string) => {
-    saveDocument({
-      id: params.documentId!,
-      content: content,
-    });
+    console.log("Yay you saved");
+    // saveDocument({
+    //   id: params.documentId!,
+    //   content: content,
+    // });
   };
 
   const [_, deleteDocumentMutation] = useDeleteDocumentMutation();
@@ -49,6 +52,7 @@ const DocumentView: FunctionComponent<Props> = ({}) => {
   };
 
   const [moveDocumentModal, setMoveDocumentModal] = useState(false);
+  const [newSectionModal, setNewSectionModal] = useState(false);
 
   const [, moveMutation] = useMoveDocumentMutation();
 
@@ -65,38 +69,51 @@ const DocumentView: FunctionComponent<Props> = ({}) => {
   if (!data || !data.document || error)
     return <div>{JSON.stringify(error)}</div>;
   return (
-    <div>
-      <div style={{ display: "flex", gap: "0.5em" }}>
-        <Link
-          className="btn"
-          to={`../folder/${data?.document?.parentFolder?.id}`}
-        >
-          <i className="fa fa-caret-left" aria-hidden="true"></i>
-        </Link>
-        {data.document.editable ? (
-          <div className="btn" onClick={() => setMoveDocumentModal(true)}>
-            Move
-          </div>
-        ) : null}
-        {data.document.editable ? (
-          <div
-            style={{ backgroundColor: "brown" }}
-            className="btn"
-            onClick={() => setDeleteDocumentModal(true)}
-          >
-            Delete
-          </div>
-        ) : null}
-      </div>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateRows: "min-content auto min-content",
+        height: "100%",
+        gap: "0.5em",
+      }}
+    >
+      <TitleComponent
+        style={{ background: "var(--color-background-soft)" }}
+        text={data.document.name}
+      />
 
-      <TitleComponent text={data.document.name} />
-      {/* <DocumentEditor
-      :start-content="data?.document?.content"
-      :editable="data?.document?.editable"
-      @save="save"
-    ></DocumentEditor> */}
-      <DocumentPermissions
-        documentId={params.documentId as string}
+      <div className="document-sections-container">
+        <div style={{ display: "flex", gap: "0.5em" }}>
+          <Link
+            className="btn"
+            to={`../folder/${data?.document?.parentFolder?.id}`}
+          >
+            <i className="fa fa-caret-left" aria-hidden="true"></i>
+          </Link>
+          {data.document.objectAccessControl.editable ? (
+            <div className="btn" onClick={() => setMoveDocumentModal(true)}>
+              Move
+            </div>
+          ) : null}
+          {data.document.objectAccessControl.editable ? (
+            <div
+              style={{ backgroundColor: "brown" }}
+              className="btn"
+              onClick={() => setDeleteDocumentModal(true)}
+            >
+              Delete
+            </div>
+          ) : null}
+        </div>
+        {data.document.sections.map((s) => {
+          return <Section sectionId={s.id} key={s.id}></Section>;
+        })}
+        <div className="btn" onClick={() => setNewSectionModal(true)}>
+          +
+        </div>
+      </div>
+      <Permissions
+        objectAccessControlId={data.document.objectAccessControl.id as string}
         worldId={params.worldId as string}
       />
       {deleteDocumentModal ? (
@@ -128,6 +145,14 @@ const DocumentView: FunctionComponent<Props> = ({}) => {
           <div className="btn" onClick={() => setMoveDocumentModal(false)}>
             Cancel
           </div>
+        </ModalComponent>
+      ) : null}
+      {newSectionModal ? (
+        <ModalComponent close={() => setNewSectionModal(false)}>
+          <CreateSection
+            documentId={params.documentId!}
+            onSuccess={() => setNewSectionModal(false)}
+          />
         </ModalComponent>
       ) : null}
     </div>

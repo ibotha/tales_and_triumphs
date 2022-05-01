@@ -34,36 +34,27 @@ model User {
   // Category Relations
   createdCategories DocumentCategory[]
 
-  // Document relations
-  createdDocuments  Document[] @relation("CreatedDocuments")
-  readOnlyDocuments Document[] @relation("ReadOnlyDocuments")
-  editableDocuments Document[] @relation("EditableDocuments")
-
-  // Folder relations
-  createdFolders  Folder[] @relation("CreatedFolders")
-  readOnlyFolders Folder[] @relation("ReadOnlyFolders")
-  editableFolders Folder[] @relation("EditableFolders")
-
-  // Document Template relations
-  createdDocumentTemplates  DocumentTemplate[] @relation("CreatedDocumentTemplates")
-  readOnlyDocumentTemplates DocumentTemplate[] @relation("ReadOnlyDocumentTemplates")
-  editableDocumentTemplates DocumentTemplate[] @relation("EditableDocumentTemplates")
+  // Object relations
+  createdObjectAccessControls  ObjectAccessControl[] @relation("CreatedObjects")
+  readOnlyObjectAccessControls ObjectAccessControl[] @relation("ReadOnlyObjects")
+  editableObjectAccessControls ObjectAccessControl[] @relation("EditableObjects")
 }
 
 model World {
-  id         String             @id @default(uuid())
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
-  name       String
-  creator    User               @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  creatorId  String
-  groups     UserGroup[]
-  roles      WorldRole[]
-  categories DocumentCategory[]
+  id                   String                @id @default(uuid())
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  name                 String
+  creator              User                  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId            String
+  groups               UserGroup[]
+  roles                WorldRole[]
+  categories           DocumentCategory[]
+  documents            Document[]
+  folders              Folder[]
+  documentTemplates    DocumentTemplate[]
+  objectAccessControls ObjectAccessControl[]
 
-  documents         Document[]
-  folders           Folder[]
-  documentTemplates DocumentTemplate[]
   @@unique([name, creatorId])
 }
 
@@ -92,24 +83,63 @@ model Document {
   updatedAt      DateTime          @updatedAt
   mentions       Document[]        @relation("linkedDocuments")
   mentionedIn    Document[]        @relation("linkedDocuments")
-  content        String            @default("")
   name           String            @default("document")
   category       DocumentCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   categoryId     String?
   parentFolder   Folder?           @relation(fields: [parentFolderId], references: [id], onDelete: Cascade)
   parentFolderId String?
+  sections       DocumentSection[]
 
 
   // Access Control
-  readAccessLevel  Int     @default(1)
-  writeAccessLevel Int     @default(0)
-  world            World   @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  objectAccessControl   ObjectAccessControl @relation(fields: [objectAccessControlId], references: [id])
+  world                 World               @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId               String
+  objectAccessControlId String              @unique
+  @@unique([parentFolderId, name])
+}
+
+model ObjectAccessControl {
+  id String @id @default(uuid())
+
+  // Access Control
+  readAccessLevel  Int               @default(1)
+  writeAccessLevel Int               @default(0)
+  world            World             @relation(fields: [worldId], references: [id], onDelete: Cascade)
   worldId          String
-  creator          User?   @relation("CreatedDocuments", fields: [creatorId], references: [id], onDelete: SetNull)
+  creator          User?             @relation("CreatedObjects", fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId        String?
-  readOnly         User[]  @relation("ReadOnlyDocuments")
-  edit             User[]  @relation("EditableDocuments")
-  @@unique([parentFolderId, name, worldId])
+  readOnly         User[]            @relation("ReadOnlyObjects")
+  edit             User[]            @relation("EditableObjects")
+  type             String
+  document         Document?
+  documentSection  DocumentSection?
+  folder           Folder?
+  documentTemplate DocumentTemplate?
+}
+
+model DocumentSection {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  priority  Int
+
+  objectAccessControl ObjectAccessControl @relation(fields: [objectAccessControlId], references: [id])
+
+  objectAccessControlId String       @unique
+  document              Document     @relation(fields: [documentId], references: [id])
+  documentId            String
+  type                  String?
+  name                  String?
+  textSection           TextSection?
+}
+
+model TextSection {
+  id      String @id @default(uuid())
+  content String @default("")
+
+  section           DocumentSection @relation(fields: [documentSectionId], references: [id], onDelete: Cascade)
+  documentSectionId String          @unique
 }
 
 model DocumentCategory {
@@ -140,16 +170,13 @@ model Folder {
 
 
   // Access Control
-  readAccessLevel  Int     @default(1)
-  writeAccessLevel Int     @default(0)
-  world            World   @relation(fields: [worldId], references: [id], onDelete: Cascade)
-  worldId          String
-  creator          User?   @relation("CreatedFolders", fields: [creatorId], references: [id], onDelete: SetNull)
-  creatorId        String?
-  readOnly         User[]  @relation("ReadOnlyFolders")
-  edit             User[]  @relation("EditableFolders")
+  objectAccessControl   ObjectAccessControl @relation(fields: [objectAccessControlId], references: [id])
+  objectAccessControlId String              @unique
 
-  @@unique([parentFolderId, name, worldId])
+
+  world   World  @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId String
+  @@unique([parentFolderId, name])
 }
 
 model DocumentTemplate {
@@ -159,15 +186,11 @@ model DocumentTemplate {
   name      String   @unique
   content   String
 
-  // Access Control
-  readAccessLevel  Int     @default(1)
-  writeAccessLevel Int     @default(0)
-  world            World   @relation(fields: [worldId], references: [id], onDelete: Cascade)
-  worldId          String
-  creator          User?   @relation("CreatedDocumentTemplates", fields: [creatorId], references: [id], onDelete: SetNull)
-  creatorId        String?
-  readOnly         User[]  @relation("ReadOnlyDocumentTemplates")
-  edit             User[]  @relation("EditableDocumentTemplates")
+  objectAccessControl   ObjectAccessControl @relation(fields: [objectAccessControlId], references: [id])
+  objectAccessControlId String              @unique
+  world                 World               @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  worldId               String
+
 
   @@unique([name, worldId])
 }

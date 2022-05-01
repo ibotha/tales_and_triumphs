@@ -100,22 +100,21 @@ const FormComponent = <
     [Property in keyof FieldsType]: boolean;
   }>(mapObject(fields, () => false));
 
-  async function validate(field: string | undefined) {
+  async function validate(formData: FormDataType<FieldsType>) {
     if (!validatorSchema) return;
     const errors: {
       [Property in keyof FieldsType]: string[];
     } = mapObject(fields, () => []);
     try {
       validatorSchema.validateSync(formData, { abortEarly: false });
-      setHasErrors(false);
+      setHasErrors(() => false);
     } catch (e: any) {
       let err = e as Yup.ValidationError;
-      setHasErrors(true);
+      setHasErrors(() => true);
       if (err.inner) {
         let newErrors = err.inner as Yup.ValidationError[];
         newErrors.forEach((err) => {
           if (!err.path) {
-            console.log(err.message);
             return;
           }
           let key = err.path as keyof FieldsType;
@@ -123,7 +122,7 @@ const FormComponent = <
         });
       }
     }
-    setFormErrors(errors);
+    setFormErrors(() => errors);
   }
 
   function setTouched(f: keyof FieldsType) {
@@ -133,7 +132,11 @@ const FormComponent = <
 
   let submit = async (e: FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    await validate(undefined);
+    submitCommon();
+  };
+
+  const submitCommon = () => {
+    validate(formData);
     if (!hasErrors) {
       onSubmit(formData);
       reset();
@@ -148,7 +151,7 @@ const FormComponent = <
   }
 
   const onKeyUp: KeyboardEventHandler<HTMLFormElement> = (e) => {
-    if (e.key == "Enter") onSubmit(formData);
+    if (e.key == "Enter") submitCommon();
     e.preventDefault();
   };
 
@@ -165,18 +168,14 @@ const FormComponent = <
               name: name as string,
               label: field.label,
               placeholder: field.placeholder,
-              onInput: (e: string | boolean) => {
-                validate(name as string);
-                // formData[name] =
-                //   e as FormDataType<FieldsType>[keyof FieldsType];
-                //setFormData(formData);
-              },
+              onInput: (e: string | boolean) => {},
               onChange: (e: string | boolean) => {
                 setTouched(name as string);
                 const f = { ...formData };
+                console.log("changed", f);
                 f[name] = e as FormDataType<FieldsType>[keyof FieldsType];
-                setFormData(f);
-                validate(name as string);
+                setFormData(() => f);
+                validate(f);
               },
               onTouched: () => {
                 setTouched(name as string);
