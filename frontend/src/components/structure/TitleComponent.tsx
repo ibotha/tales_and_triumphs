@@ -2,6 +2,7 @@ import { FunctionComponent } from "react";
 
 type Props = {
   text: string;
+  tag?: string;
   style?: React.CSSProperties;
 };
 
@@ -9,13 +10,11 @@ const TitleComponent: FunctionComponent<Props> = ({
   text,
   children,
   style,
+  tag,
 }) => {
   document.title = "T&T | " + text;
-  return (
-    <h1 style={style}>
-      <slot>{children || text}</slot>
-    </h1>
-  );
+  const TagName = (tag || "h1") as keyof JSX.IntrinsicElements;
+  return <TagName style={style}>{children || text}</TagName>;
 };
 
 export default TitleComponent;

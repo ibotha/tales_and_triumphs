@@ -1,6 +1,6 @@
 import { FunctionComponent, useState } from "react";
 import { useFolderContentsQuery } from "../../generated/graphql-components";
-import { ObjectBundle, ObjectTypes } from "./FolderTree";
+import { ObjectBundle, eObjectTypes } from "./FolderTree";
 
 type Props = {
   selection?: ObjectBundle | null;
@@ -28,10 +28,10 @@ const FolderTreeFolder: FunctionComponent<Props> = ({
   return (
     <div>
       <div
-        onClick={() => onSelect({ id: folderId, type: ObjectTypes.Folder })}
+        onClick={() => onSelect({ id: folderId, type: eObjectTypes.Folder })}
         className={
           (selection &&
-          selection.type === ObjectTypes.Folder &&
+          selection.type === eObjectTypes.Folder &&
           selection.id === folderId
             ? "folder-tree-selected"
             : "") + " folder-tree-row"
@@ -68,13 +68,13 @@ const FolderTreeFolder: FunctionComponent<Props> = ({
                     key={d.id}
                     className={
                       (selection &&
-                      selection.type === ObjectTypes.Document &&
+                      selection.type === eObjectTypes.Document &&
                       selection.id === d.id
                         ? "folder-tree-selected"
                         : "") + " folder-tree-row"
                     }
                     onClick={() =>
-                      onSelect({ id: d.id, type: ObjectTypes.Document })
+                      onSelect({ id: d.id, type: eObjectTypes.Document })
                     }
                   >
                     <i

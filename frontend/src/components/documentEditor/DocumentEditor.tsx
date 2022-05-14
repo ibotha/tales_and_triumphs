@@ -1,20 +1,36 @@
-import { FunctionComponent, useEffect, useRef, useState } from "react";
+import { FunctionComponent, useEffect, useState } from "react";
 import {
+  CompositeDecorator,
+  ContentBlock,
   ContentState,
   convertFromRaw,
   convertToRaw,
   Editor,
   EditorState,
   Modifier,
-  RichUtils,
   SelectionState,
 } from "draft-js";
 import "draft-js/dist/Draft.css";
 import "./documentEditor.scss";
-import Dropdown from "../form/Dropdown";
-import { TypeOf } from "yup";
-import FolderTree from "../noteExplorer/FolderTree";
+import FolderTree, { eObjectTypes } from "../noteExplorer/FolderTree";
 import ModalComponent from "../structure/ModalComponent";
+import DocumentLink from "./DocumentLink";
+import EditorControls from "./EditorControls";
+import FolderLink from "./FolderLink";
+import AutoSuggestionDecorator from "./AutoSuggestDecorator";
+import _ from "lodash";
+import {
+  getCurrentlySelectedAutosuggest,
+  InsertLinkEntity,
+  setDecoratedTextGenerator,
+} from "./editorUtil";
+import { handleBeforeInput, handleReturn } from "./editorHandlers";
+import {
+  findNamedEntitiesFactory,
+  findRegexEntitiesFactory,
+} from "./editorDecorators";
+import { AutosuggestMap } from "./editorTypes";
+import AutoSuggest from "./AutoSuggest";
 
 type Props = {
   startContent: string;
@@ -23,17 +39,10 @@ type Props = {
   save: (content: string) => void;
 };
 
-const blockToAbrvTypeMap = {
-  "header-one": "H1",
-  "header-two": "H2",
-  "header-three": "H3",
-};
+const findDocumentLinkEntities = findNamedEntitiesFactory("DOCUMENT LINK");
+const findFolderLinkEntities = findNamedEntitiesFactory("FOLDER LINK");
 
-const abrvToBlockTypeMap = {
-  H1: "header-one",
-  H2: "header-two",
-  H3: "header-three",
-};
+const findAutoComplete = findRegexEntitiesFactory(/(@\`[^@\`]*\`)/g);
 
 const DocumentEditor: FunctionComponent<Props> = ({
   save,
@@ -41,14 +50,94 @@ const DocumentEditor: FunctionComponent<Props> = ({
   startContent,
   worldId,
 }) => {
-  const [editorState, setEditorState] = useState(
+  let setDecoratedText = (text: string, entityKey: string) => {};
+  const [suggestRanges, setSuggestRanges] = useState<AutosuggestMap>({});
+  const [isFocused, setIsFocused] = useState(false);
+  const decorator = new CompositeDecorator([
+    {
+      strategy: findDocumentLinkEntities,
+      component: DocumentLink,
+      props: {
+        setDecoratedText: (text: string, entityKey: string) => {
+          setDecoratedText(text, entityKey);
+        },
+      },
+    },
+    {
+      strategy: findFolderLinkEntities,
+      component: FolderLink,
+      props: {
+        setDecoratedText: (text: string, entityKey: string) => {
+          setDecoratedText(text, entityKey);
+        },
+      },
+    },
+    {
+      strategy: (
+        contentBlock: ContentBlock,
+        callback: (start: number, end: number) => void,
+        contentState: ContentState
+      ) => {
+        let ranges: { start: number; end: number }[] = [];
+        findAutoComplete(
+          contentBlock,
+          (start, end) => {
+            ranges.push({ start, end });
+            callback(start, end);
+          },
+          contentState
+        );
+        const key = contentBlock.getKey();
+        if (!_.isEqual(suggestRanges[key], ranges))
+          setSuggestRanges((suggestRanges) => {
+            suggestRanges[key] = ranges;
+            return suggestRanges;
+          });
+      },
+      component: AutoSuggestionDecorator,
+      props: {
+        setDecoratedText: (text: string, entityKey: string) => {
+          setDecoratedText(text, entityKey);
+        },
+      },
+    },
+  ]);
+
+  const [editorState, setEditorStateInternal] = useState(
     startContent.length > 0
-      ? EditorState.createWithContent(convertFromRaw(JSON.parse(startContent)))
-      : EditorState.createEmpty()
+      ? EditorState.createWithContent(
+          convertFromRaw(JSON.parse(startContent)),
+          decorator
+        )
+      : EditorState.createEmpty(decorator)
   );
+
+  const setEditorState = (state: EditorState) => {
+    setEditorStateInternal(() => state);
+  };
+
+  useEffect(() => {
+    const saveInterval = () =>
+      save(JSON.stringify(convertToRaw(editorState.getCurrentContent())));
+    const interval = setInterval(saveInterval, 10000);
+    return clearInterval(interval);
+  });
+
+  setDecoratedText = setDecoratedTextGenerator(setEditorStateInternal);
   const [editorRef, setEditorRef] = useState<Editor | null>();
   const [findFolderModal, setFindFolderModal] = useState(false);
-  const currentStyle = editorState.getCurrentInlineStyle();
+  const setEditorStateKeepSelection = (editorState: EditorState) => {
+    setEditorState(
+      EditorState.forceSelection(editorState, editorState.getSelection())
+    );
+  };
+  const [currentAutoSuggest, id, match] = isFocused
+    ? getCurrentlySelectedAutosuggest(editorState, suggestRanges) ?? [
+        undefined,
+        undefined,
+        undefined,
+      ]
+    : [undefined, undefined, undefined];
   return (
     <div
       style={{
@@ -57,113 +146,17 @@ const DocumentEditor: FunctionComponent<Props> = ({
         gap: "0.5em",
       }}
     >
-      <div
-        className="editor-controls"
-        style={{
-          zIndex: 10,
-          backgroundColor: "var(--color-background-soft)",
-          padding: "0.25em",
-          display: "flex",
-          flexDirection: "row",
-          gap: "0.25em",
-          position: "sticky",
-          top: 0,
-        }}
-      >
-        <div style={{ display: "flex" }}>
-          <div
-            style={{
-              borderRight: `2px solid ${
-                RichUtils.getCurrentBlockType(editorState) in blockToAbrvTypeMap
-                  ? "var(--color-secondary)"
-                  : "transparent"
-              }`,
-            }}
-          ></div>
-
-          <Dropdown
-            options={["H1", "H2", "H3"]}
-            value={
-              blockToAbrvTypeMap[
-                RichUtils.getCurrentBlockType(
-                  editorState
-                ) as keyof typeof blockToAbrvTypeMap
-              ] || "H1"
-            }
-            onChange={(v) => {
-              setEditorState(
-                RichUtils.toggleBlockType(
-                  editorState,
-                  abrvToBlockTypeMap[v as keyof typeof abrvToBlockTypeMap]
-                )
-              );
-            }}
-          >
-            B
-          </Dropdown>
-        </div>
-        <div
-          className={
-            "btn " +
-            (RichUtils.getCurrentBlockType(editorState) ===
-            "unordered-list-item"
-              ? ""
-              : "inactive")
-          }
-          onClick={() => {
-            setEditorState(
-              RichUtils.toggleBlockType(editorState, "unordered-list-item")
-            );
-          }}
-        >
-          *
-        </div>
-        <div
-          className={
-            "btn " +
-            (RichUtils.getCurrentBlockType(editorState) === "ordered-list-item"
-              ? ""
-              : "inactive")
-          }
-          onClick={() => {
-            setEditorState(
-              RichUtils.toggleBlockType(editorState, "ordered-list-item")
-            );
-          }}
-        >
-          1.
-        </div>
-        <div
-          className={"btn " + (currentStyle.has("BOLD") ? "" : "inactive")}
-          onClick={() => {
-            setEditorState(RichUtils.toggleInlineStyle(editorState, "BOLD"));
-          }}
-          style={{ fontWeight: "bold" }}
-        >
-          B
-        </div>
-        <div
-          className={"btn " + (currentStyle.has("ITALIC") ? "" : "inactive")}
-          onClick={() => {
-            setEditorState(RichUtils.toggleInlineStyle(editorState, "ITALIC"));
-          }}
-          style={{ fontStyle: "italic" }}
-        >
-          I
-        </div>
-        <div className={"btn"} onClick={() => setFindFolderModal(true)}>
-          Link
-        </div>
-        <div
-          className={"btn"}
-          onClick={() =>
+      {editable ? (
+        <EditorControls
+          editorState={editorState}
+          setEditorState={setEditorStateKeepSelection}
+          onSave={() =>
             save(JSON.stringify(convertToRaw(editorState.getCurrentContent())))
           }
-          style={{ fontStyle: "italic" }}
-        >
-          Save
-        </div>
-      </div>
+          onLink={() => setFindFolderModal(true)}
+        />
+      ) : null}
+
       <div className="editor-container" onClick={() => editorRef?.focus()}>
         <Editor
           editorState={editorState}
@@ -171,46 +164,68 @@ const DocumentEditor: FunctionComponent<Props> = ({
           ref={(ref) => {
             setEditorRef(ref);
           }}
-          handleReturn={(a, editorState) => {
-            if (
-              RichUtils.getCurrentBlockType(editorState) in blockToAbrvTypeMap
-            ) {
-              // Create new content block
-              let content = Modifier.splitBlock(
-                editorState.getCurrentContent(),
-                editorState.getSelection()
-              );
-
-              // Get the new content block's key
-              let selection = editorState.getSelection();
-              const newBlockKey = content
-                .getBlockAfter(selection.getFocusKey())
-                ?.getKey();
-              if (!newBlockKey) return "not-handled";
-
-              // Set the block type to paragraph
-              selection = SelectionState.createEmpty(newBlockKey);
-              content = Modifier.setBlockType(content, selection, "paragraph");
-              setEditorState(() =>
-                EditorState.forceSelection(
-                  EditorState.createWithContent(content),
-                  selection
-                )
-              );
-              return "handled";
-            }
-            return "not-handled";
-          }}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          readOnly={!editable}
+          handleBeforeInput={handleBeforeInput(setEditorState)}
+          handleReturn={
+            currentAutoSuggest ? () => "handled" : handleReturn(setEditorState)
+          }
         />
       </div>
       {findFolderModal ? (
         <ModalComponent close={() => setFindFolderModal(false)}>
           <FolderTree
             worldId={worldId}
-            onSelect={() => setFindFolderModal(false)}
+            onSelect={(s) => {
+              setEditorState(
+                EditorState.push(
+                  editorState,
+                  InsertLinkEntity(
+                    editorState.getCurrentContent(),
+                    editorState.getSelection(),
+                    s
+                  ),
+                  "apply-entity"
+                )
+              );
+              setFindFolderModal(false);
+            }}
             showDocuments={true}
           ></FolderTree>
         </ModalComponent>
+      ) : null}
+      {currentAutoSuggest ? (
+        <AutoSuggest
+          followId={id}
+          worldId={worldId}
+          value={currentAutoSuggest}
+          onSelect={(s) => {
+            const contentState = editorState.getCurrentContent();
+            const contentStateWithEntity = contentState.createEntity(
+              s.type === eObjectTypes.Document
+                ? "DOCUMENT LINK"
+                : "FOLDER LINK",
+              "IMMUTABLE",
+              {
+                id: s.id,
+              }
+            );
+            const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+
+            const newContentState = Modifier.applyEntity(
+              contentStateWithEntity,
+              SelectionState.createEmpty(match.key).merge({
+                anchorOffset: match.start,
+                focusOffset: match.end,
+              }),
+              entityKey
+            );
+            setEditorState(
+              EditorState.push(editorState, newContentState, "apply-entity")
+            );
+          }}
+        ></AutoSuggest>
       ) : null}
     </div>
   );

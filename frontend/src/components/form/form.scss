@@ -8,13 +8,13 @@
   width: 100%;
   text-align: center;
   * + hr {
-    margin-top: 1em;
   }
 }
 
 form {
   background-color: var(--color-background-mute);
   width: calc(100%);
+  padding: 0 0 1em 0;
 }
 
 .form-field {

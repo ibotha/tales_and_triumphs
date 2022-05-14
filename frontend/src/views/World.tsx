@@ -39,6 +39,7 @@ const World: FunctionComponent<Props> = ({}) => {
       <SideHeader
         header={<TitleComponent text={data.world.name} />}
         rightFraction="3fr"
+        leftFraction="15em"
         vCentered={false}
         dropdown={
           <div style={{ display: "grid", gap: "0.5em", marginTop: "1em" }}>

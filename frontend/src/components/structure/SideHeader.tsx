@@ -5,7 +5,8 @@ type Props = {
   header: JSX.Element;
   dropdown?: JSX.Element;
   vCentered: boolean;
-  rightFraction: string;
+  rightFraction?: string;
+  leftFraction?: string;
 };
 
 const SideHeader: FunctionComponent<Props> = ({
@@ -13,6 +14,7 @@ const SideHeader: FunctionComponent<Props> = ({
   dropdown,
   vCentered,
   rightFraction,
+  leftFraction,
   children,
 }) => {
   let [showDropdown, setShowDropdown] = useState(false);
@@ -20,12 +22,17 @@ const SideHeader: FunctionComponent<Props> = ({
   return (
     <div
       className={`side-header-container ${collapsed ? "collapsed" : ""}`}
-      style={{ "--right-fraction": rightFraction } as React.CSSProperties}
+      style={
+        {
+          "--right-fraction": rightFraction || "3fr",
+          "--left-fraction": leftFraction || "1fr",
+        } as React.CSSProperties
+      }
     >
       <header className={vCentered ? "flex" : ""}>
         {header}
         {!!dropdown ? (
-          <div className="side-dropdown">
+          <div className="side-dropdown" style={{ padding: "0 0.5em" }}>
             <hr style={{ marginTop: "1em" }} />
             <div
               className={"dropdown-content " + (!showDropdown ? "hidden" : "")}

@@ -3,14 +3,14 @@ import { useRootFolderQuery } from "../../generated/graphql-components";
 import FolderTreeFolder from "./FolderTreeFolder";
 import "./noteExplorer.scss";
 
-export enum ObjectTypes {
+export enum eObjectTypes {
   Document = "document",
   Folder = "folder",
 }
 
 export interface ObjectBundle {
   id: string;
-  type: ObjectTypes;
+  type: eObjectTypes;
 }
 
 type Props = {
@@ -43,9 +43,8 @@ const FolderTree: FunctionComponent<Props> = ({
       <div className="folder-tree">
         <FolderTreeFolder
           onSelect={(newSelection: ObjectBundle) => {
-            if (selection && selection.id == newSelection.id)
-              setSelection(null);
-            else setSelection(newSelection);
+            if (!selection || selection.id != newSelection.id)
+              setSelection(newSelection);
           }}
           folderId={data.world.rootFolder.id}
           selection={selection}

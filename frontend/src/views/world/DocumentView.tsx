@@ -15,6 +15,8 @@ import {
 } from "../../generated/graphql-components";
 import CreateSection from "../../components/documentEditor/CreateSection";
 import Section from "../../components/documentEditor/Section";
+import ContentEditable from "react-contenteditable";
+import RenameDocument from "./RenameDocument";
 
 type Props = {};
 
@@ -30,16 +32,6 @@ const DocumentView: FunctionComponent<Props> = ({}) => {
     },
   });
 
-  // const [, saveDocument] = useUpdateDocumentMutation();
-
-  let save = (content: string) => {
-    console.log("Yay you saved");
-    // saveDocument({
-    //   id: params.documentId!,
-    //   content: content,
-    // });
-  };
-
   const [_, deleteDocumentMutation] = useDeleteDocumentMutation();
 
   let deleteDocument = () => {
@@ -52,6 +44,7 @@ const DocumentView: FunctionComponent<Props> = ({}) => {
   };
 
   const [moveDocumentModal, setMoveDocumentModal] = useState(false);
+  const [renameDocumentModal, setRenameDocumentModal] = useState(false);
   const [newSectionModal, setNewSectionModal] = useState(false);
 
   const [, moveMutation] = useMoveDocumentMutation();
@@ -77,11 +70,12 @@ const DocumentView: FunctionComponent<Props> = ({}) => {
         gap: "0.5em",
       }}
     >
-      <TitleComponent
-        style={{ background: "var(--color-background-soft)" }}
-        text={data.document.name}
-      />
-
+      <div onClick={() => setRenameDocumentModal(true)}>
+        <TitleComponent
+          style={{ background: "var(--color-background-soft)" }}
+          text={data.document.name}
+        />
+      </div>
       <div className="document-sections-container">
         <div style={{ display: "flex", gap: "0.5em" }}>
           <Link
@@ -152,6 +146,15 @@ const DocumentView: FunctionComponent<Props> = ({}) => {
           <CreateSection
             documentId={params.documentId!}
             onSuccess={() => setNewSectionModal(false)}
+          />
+        </ModalComponent>
+      ) : null}
+      {renameDocumentModal ? (
+        <ModalComponent close={() => setRenameDocumentModal(false)}>
+          <RenameDocument
+            uid={params.documentId!}
+            onSuccess={() => setRenameDocumentModal(false)}
+            initialValue={data.document.name}
           />
         </ModalComponent>
       ) : null}

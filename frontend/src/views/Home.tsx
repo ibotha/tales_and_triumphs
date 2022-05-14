@@ -24,6 +24,7 @@ const Home: FunctionComponent<Props> = ({}) => {
         </div>
       }
       vCentered={false}
+      leftFraction="15em"
       rightFraction="3fr"
       dropdown={
         <div style={{ display: "grid", gap: "0.5em", marginTop: "1em" }}>

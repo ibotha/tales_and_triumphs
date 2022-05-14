@@ -50,9 +50,8 @@ const CreateFolder: FunctionComponent<Props> = ({
         fields={formFields}
         onSubmit={submit}
         initialErrors={formErrors}
-      >
-        <TitleComponent text="Create Folder"> </TitleComponent>
-      </FormComponent>
+        header={<TitleComponent text="Create Folder" tag="h2"></TitleComponent>}
+      ></FormComponent>
     </div>
   );
 };

@@ -61,3 +61,10 @@ mutation DeleteDocumentSection($sectionId: String!) {
     }
   }
 }
+
+mutation UpdateDocument($id: String!, $name: String) {
+  updateDocument(id: $id, name: $name) {
+    id
+    name
+  }
+}

@@ -1,14 +1,7 @@
 import "./form.scss";
 import * as Yup from "yup";
 
-import {
-  ChangeEvent,
-  FormEvent,
-  FunctionComponent,
-  KeyboardEventHandler,
-  ReactNode,
-  useState,
-} from "react";
+import { FormEvent, KeyboardEventHandler, ReactNode, useState } from "react";
 import { mapObject } from "../../util/transform";
 import FormField from "./FormField";
 
@@ -62,13 +55,13 @@ type Props<
   }
 > = {
   fields: FieldsType;
-  title?: string;
   validatorSchema?: Yup.AnySchema;
   initialErrors?: {
     [Property in keyof FieldsType]: string[];
   };
   children?: ReactNode | undefined;
   after?: ReactNode | undefined;
+  header?: ReactNode | undefined;
   onSubmit: (values: FormDataType<FieldsType>) => void;
 };
 
@@ -79,8 +72,8 @@ const FormComponent = <
 >({
   children,
   after,
+  header,
   fields,
-  title,
   validatorSchema,
   initialErrors,
   onSubmit,
@@ -158,7 +151,7 @@ const FormComponent = <
   return (
     <div className="form-container">
       <form onKeyUp={onKeyUp}>
-        {children}
+        {header}
         <hr />
         <div className="fields">
           {Object.keys(fields).map((name: keyof FieldsType) => {
@@ -172,7 +165,6 @@ const FormComponent = <
               onChange: (e: string | boolean) => {
                 setTouched(name as string);
                 const f = { ...formData };
-                console.log("changed", f);
                 f[name] = e as FormDataType<FieldsType>[keyof FieldsType];
                 setFormData(() => f);
                 validate(f);

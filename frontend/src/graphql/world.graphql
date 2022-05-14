@@ -42,3 +42,14 @@ mutation CreateWorld($name: String!) {
     }
   }
 }
+
+query FolderAndDocumentSuggestions($nameFilter: String!, $worldId: String!) {
+  folders(worldId: $worldId, nameFilter: $nameFilter) {
+    id
+    name
+  }
+  documents(worldId: $worldId, nameFilter: $nameFilter) {
+    id
+    name
+  }
+}

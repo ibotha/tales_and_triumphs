@@ -38,7 +38,7 @@ mutation CreateFolder(
   }
 }
 
-mutation UpdateFolder($name: String!, $id: String!, $colour: String!) {
+mutation UpdateFolder($name: String, $id: String!, $colour: String) {
   updateFolder(name: $name, id: $id, colour: $colour) {
     id
     name

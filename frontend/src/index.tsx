@@ -4,6 +4,7 @@ import "./index.scss";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { cacheExchange } from "@urql/exchange-graphcache";
+import { refocusExchange } from "@urql/exchange-refocus";
 import { Client, dedupExchange, fetchExchange, Provider } from "urql";
 import { exit } from "process";
 import { DeleteDocumentSectionMutation } from "./generated/graphql-components";
@@ -14,6 +15,7 @@ const client = new Client({
     credentials: "include",
   },
   exchanges: [
+    refocusExchange(),
     dedupExchange,
     cacheExchange({
       updates: {

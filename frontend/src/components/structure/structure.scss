@@ -2,7 +2,7 @@
   display: grid;
   height: 99.9vh;
   grid-template-rows: minmax(0, 1fr);
-  grid-template-columns: 1fr 1.5em var(--right-fraction);
+  grid-template-columns: var(--left-fraction) 1.5em var(--right-fraction);
 
   &.collapsed {
     grid-template-columns: 1.5em 1fr;

@@ -50,9 +50,10 @@ const CreateDocument: FunctionComponent<Props> = ({
         fields={formFields}
         onSubmit={submit}
         initialErrors={formErrors}
-      >
-        <TitleComponent text="Create Document"> </TitleComponent>
-      </FormComponent>
+        header={
+          <TitleComponent text="Create Document" tag="h2"></TitleComponent>
+        }
+      ></FormComponent>
     </div>
   );
 };

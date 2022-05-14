@@ -1,23 +1,31 @@
 import { FunctionComponent, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import FormComponent from "../components/form/FormComponent";
-import TitleComponent from "../components/structure/TitleComponent";
-import { useCreateWorldMutation } from "../generated/graphql-components";
-import { mapObject } from "../util/transform";
-import "./World.scss";
+import FormComponent from "../../components/form/FormComponent";
+import TitleComponent from "../../components/structure/TitleComponent";
+import { useUpdateFolderMutation } from "../../generated/graphql-components";
+import { mapObject } from "../../util/transform";
+import "../World.scss";
 
-type Props = {};
+type Props = {
+  initialValue: string;
+  uid: string;
+  onSuccess: () => void;
+};
 
-const CreateWorld: FunctionComponent<Props> = ({}) => {
+const RenamFolder: FunctionComponent<Props> = ({
+  initialValue,
+  uid,
+  onSuccess,
+}) => {
   const navigate = useNavigate();
   const params = useParams();
-  const [_, createWorld] = useCreateWorldMutation();
+  const [_, updateFolder] = useUpdateFolderMutation();
 
   const formFields = {
     name: {
       label: "Name",
       placeholder: "Australia",
-      initialValue: "",
+      initialValue: initialValue,
       type: "text" as "text",
     },
   };
@@ -27,12 +35,13 @@ const CreateWorld: FunctionComponent<Props> = ({}) => {
   );
 
   const submit = (s: any) => {
-    createWorld({
+    updateFolder({
       name: s.name,
+      id: uid,
     })
       .then((e) => {
-        if (!e.data?.createWorld?.data) return;
-        navigate("/world/" + e.data.createWorld.data.id);
+        if (!e.data?.updateFolder) return;
+        onSuccess();
       })
       .catch((err) => console.log(err));
   };
@@ -47,10 +56,11 @@ const CreateWorld: FunctionComponent<Props> = ({}) => {
             Back
           </Link>
         }
-        header={<TitleComponent text="Create World" tag="h2"></TitleComponent>}
-      ></FormComponent>
+      >
+        <h2>Rename Folder</h2>
+      </FormComponent>
     </div>
   );
 };
 
-export default CreateWorld;
+export default RenamFolder;

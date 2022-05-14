@@ -23,5 +23,18 @@
   background-color: var(--color-background-mute);
 }
 
-.text-section-container {
+.folder-link {
+  &::before {
+    font: normal normal normal 14px/1 FontAwesome;
+    content: "\f07b";
+    padding-right: 0.125em;
+  }
+}
+
+.document-link {
+  &::before {
+    font: normal normal normal 14px/1 FontAwesome;
+    content: "\f15b";
+    padding-right: 0.125em;
+  }
 }

@@ -110,6 +110,14 @@ export const deleteDocumentSection = gql`
   }
 }
     `;
+export const updateDocument = gql`
+    mutation UpdateDocument($id: String!, $name: String) {
+  updateDocument(id: $id, name: $name) {
+    id
+    name
+  }
+}
+    `;
 export const document = gql`
     query Document($id: String!) {
   document(id: $id) {
@@ -168,7 +176,7 @@ export const createFolder = gql`
 }
     `;
 export const updateFolder = gql`
-    mutation UpdateFolder($name: String!, $id: String!, $colour: String!) {
+    mutation UpdateFolder($name: String, $id: String!, $colour: String) {
   updateFolder(name: $name, id: $id, colour: $colour) {
     id
     name
@@ -365,6 +373,18 @@ export const createWorld = gql`
       field
       message
     }
+  }
+}
+    `;
+export const folderAndDocumentSuggestions = gql`
+    query FolderAndDocumentSuggestions($nameFilter: String!, $worldId: String!) {
+  folders(worldId: $worldId, nameFilter: $nameFilter) {
+    id
+    name
+  }
+  documents(worldId: $worldId, nameFilter: $nameFilter) {
+    id
+    name
   }
 }
     `;

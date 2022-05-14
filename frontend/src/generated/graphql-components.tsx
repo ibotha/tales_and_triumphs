@@ -350,6 +350,7 @@ export type QueryDocumentTemplatesArgs = {
 
 
 export type QueryDocumentsArgs = {
+  nameFilter: Scalars['String'];
   worldId: Scalars['String'];
 };
 
@@ -360,6 +361,7 @@ export type QueryFolderArgs = {
 
 
 export type QueryFoldersArgs = {
+  nameFilter: Scalars['String'];
   worldId: Scalars['String'];
 };
 
@@ -431,7 +433,6 @@ export type UserPermissionInput = {
 export type World = {
   __typename?: 'World';
   categories: Array<DocumentCategory>;
-  documents: Array<Document>;
   id: Scalars['ID'];
   myRole?: Maybe<RoleLevel>;
   name: Scalars['String'];
@@ -514,6 +515,14 @@ export type DeleteDocumentSectionMutationVariables = Exact<{
 
 export type DeleteDocumentSectionMutation = { __typename?: 'Mutation', deleteDocumentSection?: { __typename?: 'DocumentSection', id: string, document: { __typename?: 'Document', id: string, sections: Array<{ __typename?: 'DocumentSection', id: string }> } } | null };
 
+export type UpdateDocumentMutationVariables = Exact<{
+  id: Scalars['String'];
+  name?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type UpdateDocumentMutation = { __typename?: 'Mutation', updateDocument?: { __typename?: 'Document', id: string, name: string } | null };
+
 export type BasicDocumentFragment = { __typename?: 'Document', id: string, name: string, parentFolder?: { __typename?: 'Folder', id: string } | null, objectAccessControl: { __typename?: 'ObjectAccessControl', editable: boolean, id: string }, sections: Array<{ __typename?: 'DocumentSection', id: string }>, world: { __typename?: 'World', id: string } };
 
 export type DocumentQueryVariables = Exact<{
@@ -555,9 +564,9 @@ export type CreateFolderMutationVariables = Exact<{
 export type CreateFolderMutation = { __typename?: 'Mutation', createFolder?: { __typename?: 'FolderWrapper', errors?: Array<string> | null, data?: { __typename?: 'Folder', id: string, name: string } | null, fieldErrors?: Array<{ __typename?: 'FieldErrorItem', field: string, message: string }> | null } | null };
 
 export type UpdateFolderMutationVariables = Exact<{
-  name: Scalars['String'];
+  name?: InputMaybe<Scalars['String']>;
   id: Scalars['String'];
-  colour: Scalars['String'];
+  colour?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -658,6 +667,14 @@ export type CreateWorldMutationVariables = Exact<{
 
 
 export type CreateWorldMutation = { __typename?: 'Mutation', createWorld?: { __typename?: 'WorldWrapper', errors?: Array<string> | null, data?: { __typename?: 'World', id: string, name: string } | null, fieldErrors?: Array<{ __typename?: 'FieldErrorItem', field: string, message: string }> | null } | null };
+
+export type FolderAndDocumentSuggestionsQueryVariables = Exact<{
+  nameFilter: Scalars['String'];
+  worldId: Scalars['String'];
+}>;
+
+
+export type FolderAndDocumentSuggestionsQuery = { __typename?: 'Query', folders: Array<{ __typename?: 'Folder', id: string, name: string }>, documents: Array<{ __typename?: 'Document', id: string, name: string }> };
 
 export const BasicDocumentFragmentDoc = gql`
     fragment BasicDocument on Document {
@@ -802,6 +819,18 @@ export const DeleteDocumentSectionDocument = gql`
 export function useDeleteDocumentSectionMutation() {
   return Urql.useMutation<DeleteDocumentSectionMutation, DeleteDocumentSectionMutationVariables>(DeleteDocumentSectionDocument);
 };
+export const UpdateDocumentDocument = gql`
+    mutation UpdateDocument($id: String!, $name: String) {
+  updateDocument(id: $id, name: $name) {
+    id
+    name
+  }
+}
+    `;
+
+export function useUpdateDocumentMutation() {
+  return Urql.useMutation<UpdateDocumentMutation, UpdateDocumentMutationVariables>(UpdateDocumentDocument);
+};
 export const DocumentDocument = gql`
     query Document($id: String!) {
   document(id: $id) {
@@ -880,7 +909,7 @@ export function useCreateFolderMutation() {
   return Urql.useMutation<CreateFolderMutation, CreateFolderMutationVariables>(CreateFolderDocument);
 };
 export const UpdateFolderDocument = gql`
-    mutation UpdateFolder($name: String!, $id: String!, $colour: String!) {
+    mutation UpdateFolder($name: String, $id: String!, $colour: String) {
   updateFolder(name: $name, id: $id, colour: $colour) {
     id
     name
@@ -1135,4 +1164,20 @@ export const CreateWorldDocument = gql`
 
 export function useCreateWorldMutation() {
   return Urql.useMutation<CreateWorldMutation, CreateWorldMutationVariables>(CreateWorldDocument);
+};
+export const FolderAndDocumentSuggestionsDocument = gql`
+    query FolderAndDocumentSuggestions($nameFilter: String!, $worldId: String!) {
+  folders(worldId: $worldId, nameFilter: $nameFilter) {
+    id
+    name
+  }
+  documents(worldId: $worldId, nameFilter: $nameFilter) {
+    id
+    name
+  }
+}
+    `;
+
+export function useFolderAndDocumentSuggestionsQuery(options: Omit<Urql.UseQueryArgs<FolderAndDocumentSuggestionsQueryVariables>, 'query'>) {
+  return Urql.useQuery<FolderAndDocumentSuggestionsQuery>({ query: FolderAndDocumentSuggestionsDocument, ...options });
 };

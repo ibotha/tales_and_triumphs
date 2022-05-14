@@ -7,19 +7,18 @@ import FolderIcon from "../../components/noteExplorer/FolderIcon";
 import FolderPermissions from "../../components/noteExplorer/Permissions";
 import FolderTree, {
   ObjectBundle,
-  ObjectTypes,
+  eObjectTypes,
 } from "../../components/noteExplorer/FolderTree";
 import UpdateFolder from "../../components/noteExplorer/UpdateFolder";
 import ConfirmComponent from "../../components/structure/ConfirmComponent";
 import ModalComponent from "../../components/structure/ModalComponent";
 import {
-  Folder,
   useDeleteFolderMutation,
   useFolderQuery,
   useMoveFolderMutation,
-  useWorldQuery,
 } from "../../generated/graphql-components";
 import "./worldView.scss";
+import RenameFolder from "./RenameFolder";
 
 type Props = {};
 
@@ -45,6 +44,7 @@ const NoteExplorer: FunctionComponent<Props> = ({}) => {
   const [_, deleteFolderMutation] = useDeleteFolderMutation();
 
   const [moveDocumentModal, setMoveDocumentModal] = useState(false);
+  const [renameFolderModal, setRenameFolderModal] = useState(false);
 
   const [, moveMutation] = useMoveFolderMutation();
 
@@ -74,8 +74,9 @@ const NoteExplorer: FunctionComponent<Props> = ({}) => {
   };
 
   const jumpTo = (s: ObjectBundle) => {
-    if (s.type === ObjectTypes.Document) navigate(`../document/${s.id}`);
-    else if (s.type === ObjectTypes.Folder) navigate(`../folder/${s.id}`);
+    if (s.type === eObjectTypes.Document) navigate(`../document/${s.id}`);
+    else if (s.type === eObjectTypes.Folder) navigate(`../folder/${s.id}`);
+    setJumpToModal(false);
   };
   return (
     <div style={{ height: "100%" }}>
@@ -88,14 +89,16 @@ const NoteExplorer: FunctionComponent<Props> = ({}) => {
         }}
       >
         {data.folder.parentFolder ? (
-          <h2
-            style={{
-              backgroundColor: "var(--color-background-mute)",
-              boxShadow: "2px 1px 5px rgb(0.3, 0.3, 0.3, 0.2)",
-            }}
-          >
-            {data.folder.name}
-          </h2>
+          <div onClick={() => setRenameFolderModal(true)}>
+            <h2
+              style={{
+                backgroundColor: "var(--color-background-mute)",
+                boxShadow: "2px 1px 5px rgb(0.3, 0.3, 0.3, 0.2)",
+              }}
+            >
+              {data.folder.name}
+            </h2>
+          </div>
         ) : (
           <div></div>
         )}
@@ -238,6 +241,16 @@ const NoteExplorer: FunctionComponent<Props> = ({}) => {
           <div className="btn" onClick={() => setMoveDocumentModal(false)}>
             Cancel
           </div>
+        </ModalComponent>
+      ) : null}
+
+      {renameFolderModal ? (
+        <ModalComponent close={() => setRenameFolderModal(false)}>
+          <RenameFolder
+            uid={params.folderId!}
+            onSuccess={() => setRenameFolderModal(false)}
+            initialValue={data.folder.name}
+          />
         </ModalComponent>
       ) : null}
     </div>
