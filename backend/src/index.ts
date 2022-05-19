@@ -24,12 +24,6 @@ async function startServer() {
 
   app.set("trust proxy", 1);
   app.use(
-    cors({
-      origin: process.env.CORS_ORIGIN,
-      credentials: true,
-    })
-  );
-  app.use(
     session({
       name: COOKIE_NAME,
       store: new RedisStore({
@@ -72,9 +66,7 @@ async function startServer() {
     },
   });
 
-  app.use("/", (req, res) => {
-    res.send("hi");
-  });
+  app.use(express.static("frontend"));
   // Host App
   const port = 4000;
 

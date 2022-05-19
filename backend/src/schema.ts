@@ -2,7 +2,6 @@ import { makeSchema, plugin } from "nexus";
 import { join } from "path";
 import * as types from "./graphql";
 import * as path from "path";
-import { PrismaSelect } from "@paljs/plugins";
 import { getNexusNamedType } from "nexus/dist/utils";
 import { NexusPlugin } from "nexus/dist/plugin";
 export const graphQLTypeMap: any = {};

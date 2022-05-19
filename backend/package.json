@@ -6,6 +6,7 @@
   "scripts": {
     "generate": "npx ts-node --transpile-only src/schema",
     "dev": "ts-node-dev --transpile-only --no-notify --exit-child src/index.ts",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Isard Botha",

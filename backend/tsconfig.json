@@ -1,16 +1,17 @@
 {
-    "compilerOptions": {
-        "target": "ES6",
-        "module": "commonjs",
-        "lib": [
-            "esnext"
-        ],
-        "strict": true,
-        "rootDir": ".",
-        "outDir": "dist",
-        "sourceMap": true,
-        "esModuleInterop": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true
-    }
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs",
+    "lib": ["esnext"],
+    "strict": true,
+    "rootDir": ".",
+    "outDir": "dist",
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "removeComments": true,
+    "preserveConstEnums": true
+  }
 }

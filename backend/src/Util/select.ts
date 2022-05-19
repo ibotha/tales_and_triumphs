@@ -78,6 +78,7 @@ type SelectionType =
   | "Folder"
   | "AccessControl"
   | "DocumentSection"
+  | "DocumentCategory"
   | "TextSection";
 
 type SelectionDefaultsMap<T extends SelectionType> = T extends "World"
@@ -88,6 +89,8 @@ type SelectionDefaultsMap<T extends SelectionType> = T extends "World"
   ? Prisma.WorldRoleSelect
   : T extends "Document"
   ? Prisma.DocumentSelect
+  : T extends "DocumentCategory"
+  ? Prisma.DocumentCategorySelect
   : T extends "Folder"
   ? Prisma.FolderSelect
   : T extends "Template"
