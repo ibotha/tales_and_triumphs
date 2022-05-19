@@ -228,12 +228,14 @@ export const documentQuery = queryField((t) => {
     type: "Document",
     args: {
       worldId: nonNull(stringArg()),
+      nameFilter: nonNull(stringArg()),
     },
-    resolve(parent, { worldId }, context, info) {
+    resolve(parent, { worldId, nameFilter }, context, info) {
       let select = generateSelection<"Document">(info);
       return context.prisma.document.findMany({
-        where: { worldId },
+        where: { worldId, name: { contains: nameFilter } },
         ...select,
+        take: 10,
       });
     },
   });

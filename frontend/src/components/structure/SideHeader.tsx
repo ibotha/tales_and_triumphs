@@ -33,7 +33,7 @@ const SideHeader: FunctionComponent<Props> = ({
         {header}
         {!!dropdown ? (
           <div className="side-dropdown" style={{ padding: "0 0.5em" }}>
-            <hr style={{ marginTop: "1em" }} />
+            <hr style={{ margin: "0.25em 0 0 0" }} />
             <div
               className={"dropdown-content " + (!showDropdown ? "hidden" : "")}
             >

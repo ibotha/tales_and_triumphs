@@ -26,6 +26,11 @@ const UserManagementView: FunctionComponent<Props> = ({}) => {
         marginBottom: "1em",
       }}
     >
+      <h2
+        style={{ backgroundColor: "var(--color-background-mute)", margin: "0" }}
+      >
+        Users
+      </h2>
       {data.world.roles.map((role) => {
         return (
           <div key={role.id}>

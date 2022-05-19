@@ -10,6 +10,7 @@ import TitleComponent from "../components/structure/TitleComponent";
 import LogoutButton from "../components/userControl/LogoutButton";
 import ModalComponent from "../components/structure/ModalComponent";
 import ConfirmComponent from "../components/structure/ConfirmComponent";
+import logo from "../assets/Logo.png";
 
 type Props = {};
 
@@ -37,7 +38,11 @@ const World: FunctionComponent<Props> = ({}) => {
   return (
     <div className="container">
       <SideHeader
-        header={<TitleComponent text={data.world.name} />}
+        header={
+          <TitleComponent text={data.world.name}>
+            <img style={{ width: "1em" }} src={logo} /> {data.world.name}
+          </TitleComponent>
+        }
         rightFraction="3fr"
         leftFraction="15em"
         vCentered={false}

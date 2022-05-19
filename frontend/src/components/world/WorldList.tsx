@@ -12,10 +12,7 @@ const WorldList: FunctionComponent<Props> = ({}) => {
   if (!data || !data.myWorlds || error)
     return <div>{JSON.stringify(error)}</div>;
   return (
-    <div
-      className="banner-list"
-      style={{ display: "grid", gap: "0.5em", marginTop: "1em" }}
-    >
+    <div className="banner-list" style={{ display: "grid", gap: "0.5em" }}>
       {data.myWorlds.map((world) => (
         <WorldSummaryBanner key={world.id} uuid={world.id} />
       ))}

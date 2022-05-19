@@ -34,21 +34,6 @@ export const World = objectType({
     });
     t.nonNull.list.nonNull.field("roles", { type: "WorldRole" });
     t.nonNull.list.nonNull.field("categories", { type: "DocumentCategory" });
-    t.nonNull.list.nonNull.field("documents", {
-      type: "Document",
-      resolve: async (parent, _, context) => {
-        return parent.documents
-          ? parent.documents.filter((d) =>
-              userHasAccessLevelOnObject(
-                d.id,
-                eObjectTypes.Document,
-                eObjectPermission.READ,
-                context
-              )
-            )
-          : [];
-      },
-    });
     t.field("rootFolder", {
       type: "Folder",
       resolve: (parent, _, context, info) => {

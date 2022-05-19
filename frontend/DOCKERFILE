@@ -1,0 +1,10 @@
+FROM node:17
+
+RUN mkdir /server
+WORKDIR /server
+
+COPY build ./
+
+RUN ["npm", "install", "-g", "serve"]
+
+CMD ["serve -s build"]

@@ -101,7 +101,9 @@ const FormField: FunctionComponent<Props> = ({
                         onInput={input}
                         onChange={change}
                       />
-                      {o.label ? o.label : o.value}
+                      <span style={{ marginLeft: "0.5em" }}>
+                        {o.label ? o.label : o.value}
+                      </span>
                     </div>
                   );
                 })}

@@ -249,10 +249,15 @@ export const folderQuery = queryField((t) => {
     type: "Folder",
     args: {
       worldId: nonNull(stringArg()),
+      nameFilter: nonNull(stringArg()),
     },
-    resolve(parent, { worldId }, context, info) {
+    resolve(parent, { worldId, nameFilter }, context, info) {
       let select = generateSelection<"Folder">(info);
-      return context.prisma.folder.findMany({ where: { worldId }, ...select });
+      return context.prisma.folder.findMany({
+        where: { worldId, name: { contains: nameFilter } },
+        ...select,
+        take: 10,
+      });
     },
   });
 });

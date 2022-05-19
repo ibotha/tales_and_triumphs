@@ -32,7 +32,6 @@ const CreateWorld: FunctionComponent<Props> = ({}) => {
     })
       .then((e) => {
         if (!e.data?.createWorld?.data) return;
-        navigate("/world/" + e.data.createWorld.data.id);
       })
       .catch((err) => console.log(err));
   };
@@ -42,11 +41,6 @@ const CreateWorld: FunctionComponent<Props> = ({}) => {
         fields={formFields}
         onSubmit={submit}
         initialErrors={parentErrors}
-        after={
-          <Link className="btn" to="/home">
-            Back
-          </Link>
-        }
         header={<TitleComponent text="Create World" tag="h2"></TitleComponent>}
       ></FormComponent>
     </div>

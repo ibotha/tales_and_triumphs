@@ -80,6 +80,11 @@ const NoteExplorer: FunctionComponent<Props> = ({}) => {
   };
   return (
     <div style={{ height: "100%" }}>
+      <h2
+        style={{ backgroundColor: "var(--color-background-mute)", margin: "0" }}
+      >
+        Notes
+      </h2>
       <div
         style={{
           display: "grid",

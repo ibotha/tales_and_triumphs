@@ -4,7 +4,7 @@ import { Link, Outlet, useNavigate } from "react-router-dom";
 import SideHeader from "../components/structure/SideHeader";
 import TitleComponent from "../components/structure/TitleComponent";
 import LogoutButton from "../components/userControl/LogoutButton";
-
+import logo from "../assets/Logo.png";
 type Props = {};
 const Home: FunctionComponent<Props> = ({}) => {
   const navigate = useNavigate();
@@ -17,9 +17,10 @@ const Home: FunctionComponent<Props> = ({}) => {
   return (
     <SideHeader
       header={
-        <div style={{ marginBottom: "1em" }}>
+        <div>
           <TitleComponent text="Home">
-            Welcome {data.me.username}
+            <img style={{ width: "1em" }} src={logo} />
+            {data.me.username}
           </TitleComponent>
         </div>
       }

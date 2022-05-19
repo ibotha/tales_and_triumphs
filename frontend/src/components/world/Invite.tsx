@@ -24,10 +24,10 @@ const Invite: FunctionComponent<Props> = ({}) => {
       placeholder: "hoiti@toiti.com",
       type: "radio" as "radio",
       options: [
-        { name: "ADMIN", value: "ADMIN" },
-        { name: "TRUSTED", value: "TRUSTED" },
-        { name: "USER", value: "USER" },
-        { name: "NONE", value: "" },
+        { label: "Admin", value: "ADMIN" },
+        { label: "Trusted", value: "TRUSTED" },
+        { label: "User", value: "USER" },
+        { label: "None", value: "" },
       ],
     },
   };
@@ -52,14 +52,14 @@ const Invite: FunctionComponent<Props> = ({}) => {
         fields={formFields}
         onSubmit={submit}
         initialErrors={parentErrors}
-        after={
-          <Link className="btn" to="./">
-            Back
-          </Link>
+        header={
+          <TitleComponent
+            text="Invite / Modify"
+            tag="h2"
+            style={{ margin: "0" }}
+          ></TitleComponent>
         }
-      >
-        <TitleComponent text="Invite"> </TitleComponent>
-      </FormComponent>
+      ></FormComponent>
     </div>
   );
 };
