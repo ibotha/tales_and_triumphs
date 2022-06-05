@@ -1,0 +1,23 @@
+{
+  "apps": [
+    {
+      "name": "backend",
+      "cwd": "backend",
+      "script": "npm run dev"
+    },
+    {
+      "name": "redis",
+      "script": "redis-server"
+    },
+    {
+      "name": "frontend",
+      "cwd": "frontend",
+      "script": "npm run dev"
+    },
+    {
+      "name": "devproxy",
+      "cwd": "devproxy",
+      "script": "npm run start"
+    }
+  ]
+}

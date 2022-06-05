@@ -46,13 +46,7 @@ const Register: FunctionComponent<Props> = ({}) => {
 
   let registerValidator = Yup.object({
     email: Yup.string().email("not a valid email").required(),
-    password: Yup.string()
-      .min(8)
-      .max(50)
-      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).+$/, {
-        message:
-          "must contain 1 upper case, lower case, numeric, and special character",
-      }),
+    password: Yup.string().min(12).max(50),
     confirmPassword: Yup.string().test(
       "password",
       "must match password",
@@ -103,15 +97,14 @@ const Register: FunctionComponent<Props> = ({}) => {
   }
 
   return (
-    <div>
+    <div style={{ padding: "1em" }}>
       <FormComponent
         fields={fields}
         onSubmit={submitRegister}
         validatorSchema={registerValidator}
         initialErrors={initialErrors}
-      >
-        <TitleComponent text="Register" />
-      </FormComponent>
+        header={<TitleComponent text="Register" tag="h2" />}
+      ></FormComponent>
     </div>
   );
 };

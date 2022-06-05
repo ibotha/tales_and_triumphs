@@ -160,6 +160,15 @@ a {
   color: var(--color-secondary-text-1);
 }
 
+button:disabled,
+button:disabled:hover,
+button[disabled],
+button[disabled]:hover {
+  filter: none;
+  background-color: #cccccc;
+  color: #666666;
+}
+
 s {
   text-decoration-color: white;
   text-decoration-style: double;

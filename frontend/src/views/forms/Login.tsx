@@ -39,6 +39,7 @@ const Login: FunctionComponent<Props> = ({}) => {
   let [login, executeLogin] = useLoginMutation();
 
   let submitLogin = (loginFormValues: FormDataType<typeof fields>) => {
+    console.log(loginFormValues);
     executeLogin(loginFormValues)
       .then((ret) => {
         if (!ret.data || !ret.data.login) return;
@@ -64,15 +65,16 @@ const Login: FunctionComponent<Props> = ({}) => {
   };
 
   return (
-    <div>
+    <div style={{ padding: "1em" }}>
       <FormComponent
         fields={fields}
         onSubmit={submitLogin}
         validatorSchema={loginValidator}
         initialErrors={formErrors}
-      >
-        <TitleComponent text="Login" />
-      </FormComponent>
+        header={
+          <TitleComponent text="Login" tag="h2" style={{ margin: "0" }} />
+        }
+      ></FormComponent>
     </div>
   );
 };

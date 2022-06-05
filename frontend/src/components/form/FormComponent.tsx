@@ -92,7 +92,7 @@ const FormComponent = <
   const [formTouched, setFormTouched] = useState<{
     [Property in keyof FieldsType]: boolean;
   }>(mapObject(fields, () => false));
-
+  console.log("formdata: ", formData);
   async function validate(formData: FormDataType<FieldsType>) {
     if (!validatorSchema) return;
     const errors: {
@@ -102,6 +102,7 @@ const FormComponent = <
       validatorSchema.validateSync(formData, { abortEarly: false });
       setHasErrors(() => false);
     } catch (e: any) {
+      console.log(e);
       let err = e as Yup.ValidationError;
       setHasErrors(() => true);
       if (err.inner) {
@@ -129,8 +130,10 @@ const FormComponent = <
   };
 
   const submitCommon = () => {
+    console.log("submission");
     validate(formData);
     if (!hasErrors) {
+      console.log("valid");
       onSubmit(formData);
       reset();
     } else {
