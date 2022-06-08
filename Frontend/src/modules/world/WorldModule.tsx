@@ -1,13 +1,12 @@
-import { useGlobalState } from "../../stores/GlobalStore";
+import { Route, Routes } from "react-router-dom";
+import { WorldRoot } from "./WorldRoot";
 
 type Props = {};
 
 export const WorldModule = (_: Props) => {
-  const { state, updater } = useGlobalState();
   return (
-    <div>
-      <button onClick={() => updater.purge()}>Purge Session</button>
-      Welcome {state.user?.username}
-    </div>
+    <Routes>
+      <Route path="/" element={<WorldRoot />}></Route>
+    </Routes>
   );
 };

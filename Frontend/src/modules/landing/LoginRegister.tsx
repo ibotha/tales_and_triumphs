@@ -1,5 +1,7 @@
+import _ from "lodash";
+import { CSSProperties } from "react";
 import { Card } from "../../components/layout/Card";
-import { detail } from "../../styles/colours";
+import { detail, secondaryMute } from "../../styles/colours";
 import { Login } from "./Login";
 import { Register } from "./Register";
 
@@ -25,20 +27,24 @@ export const LoginRegister = ({ tab, changeTab }: Props) => {
           }}
         >
           <h2
-            style={{
+            style={_.merge({
               padding: "0.25em",
-              backgroundColor: tab === "login" ? detail : "",
-            }}
+            }, tab === "login" ? {} : {
+              backgroundColor: secondaryMute,
+              boxShadow: '-2px -1px 2px 1px inset rgba(0,0,0,0.4)'
+            } as CSSProperties)}
             onClick={() => changeTab("login")}
           >
             Login
           </h2>
-          <div style={{ backgroundColor: detail }}></div>
+          <div style={tab ? {} : { backgroundColor: detail }}></div>
           <h2
-            style={{
+            style={_.merge({
               padding: "0.25em",
-              backgroundColor: tab === "register" ? detail : "",
-            }}
+            }, tab === "register" ? {} : {
+              backgroundColor: secondaryMute,
+              boxShadow: '2px -1px 2px 1px inset rgba(0,0,0,0.4)'
+            } as CSSProperties)}
             onClick={() => changeTab("register")}
           >
             Register

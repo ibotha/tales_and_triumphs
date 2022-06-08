@@ -15,10 +15,10 @@ export const Button = ({
         {
           backgroundColor: accent,
           border: "none",
-          padding: "0.25em 0.5em",
+          padding: "0.125em 0.5em",
           color: accentText,
           fontFamily: "inherit",
-          fontSize: "inherit",
+          fontSize: "1.25rem",
         } as CSSProperties,
         style || {}
       )}
