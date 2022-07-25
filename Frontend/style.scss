@@ -1,0 +1,49 @@
+$primary: #222222;
+$primaryText: #eeeeee;
+$secondary: #333;
+$secondaryText: #eeeeee;
+$secondaryMute: #252525;
+$detail: #777;
+$accent: #148075;
+$accentText: #eeeeee;
+$error: #ee7777;
+
+:root {
+  font-family: Charm, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans",
+    "Helvetica Neue", sans-serif;
+  font-size: 1.25rem;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: $primary;
+  color: $primaryText;
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: Charm, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans",
+    "Helvetica Neue", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  position: relative;
+}
+
+#app {
+  height: 100vh;
+}
