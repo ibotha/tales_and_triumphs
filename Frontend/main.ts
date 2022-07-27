@@ -1,6 +1,10 @@
 import "./style.scss";
 import { Elm } from "./src/Main.elm";
-import EditorJS from "@editorjs/editorjs";
+import EditorJS, { Tool } from "@editorjs/editorjs";
+import Header from "@editorjs/header";
+import Underline from "@editorjs/underline";
+import Checklist from "@editorjs/checklist";
+import List from "@editorjs/list";
 
 if (process.env.NODE_ENV === "development") {
   const ElmDebugTransform = await import("elm-debug-transformer");
@@ -10,13 +14,27 @@ if (process.env.NODE_ENV === "development") {
   });
 }
 
+customElements.define('tnt-editor',
+    class extends HTMLElement {
+        // things required by Custom Elements
+        constructor() { super(); }
+        connectedCallback() {
+          this.onkeydown = (e) => {
+            e.preventDefault();
+          }
+        }
+        attributeChangedCallback() { this.setTextContent(); }
+        static get observedAttributes() { return ['class']; }
+
+        // Our function to set the textContent based on attributes.
+        setTextContent()
+        {
+          
+        }
+    }
+);
+
 const root = document.querySelector("#app div");
 const app = Elm.Main.init({ node: root });
 
-var editor: EditorJS | null = null;
-
 console.log(app.ports);
-app.ports.upEditor.subscribe(function (up) {
-  if (up) editor = new EditorJS("Editor");
-  else if (editor) editor.destroy();
-});

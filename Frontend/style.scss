@@ -47,3 +47,22 @@ h6 {
 #app {
   height: 100vh;
 }
+
+.editor {
+  background-color: $secondary;
+  margin: 0em 3em;
+  padding: 0.5em;
+  color: $primaryText;
+  // max-width: 60ch;
+  ::selection, .ce-block--selected .ce-block__content {
+    background-color: $secondaryMute;
+  }
+}
+
+.editor-block {
+  outline: none;
+}
+
+input {
+  color: inherit;
+}
