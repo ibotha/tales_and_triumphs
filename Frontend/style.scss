@@ -57,10 +57,20 @@ h6 {
   ::selection, .ce-block--selected .ce-block__content {
     background-color: $secondaryMute;
   }
+  outline: none;
 }
 
-.editor-block {
+.rte-main {
+  text-align: left;
   outline: none;
+  user-select: text;
+  -webkit-user-select: text;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.rte-hide-caret {
+  caret-color: transparent;
 }
 
 input {
