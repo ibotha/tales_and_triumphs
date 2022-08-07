@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Array
 import Browser
-import Html exposing (Html, div, text)
+import Html exposing (Html, div)
 import RichText.Commands exposing (defaultCommandMap)
 import RichText.Config.Decorations exposing (emptyDecorations)
 import RichText.Definitions exposing (doc, markdown, paragraph)
@@ -39,6 +39,9 @@ docNode =
                 [ block
                     (Element.element paragraph [])
                     (inlineChildren <| Array.fromList [ plainText "Hello world" ])
+                , block
+                    (Element.element paragraph [])
+                    (inlineChildren <| Array.fromList [ plainText "Hello world 2" ])
                 ]
         )
 
@@ -93,6 +96,10 @@ myUpdate msg model =
     case msg of
         InternalMessage internalEditorMsg ->
             ( { model | editor = update myConfig internalEditorMsg model.editor }, Cmd.none )
+
+
+
+-- View
 
 
 myView : Model -> Html Msg
