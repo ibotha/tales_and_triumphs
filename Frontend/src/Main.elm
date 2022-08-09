@@ -5,17 +5,19 @@ import Browser
 import Html exposing (Html, div)
 import RichText.Commands exposing (defaultCommandMap)
 import RichText.Config.Decorations exposing (emptyDecorations)
-import RichText.Definitions exposing (doc, markdown, paragraph)
+import RichText.Config.ElementDefinition exposing (ElementDefinition, ElementToHtml, HtmlToElement, blockLeaf, elementDefinition, inlineLeaf)
+import RichText.Definitions exposing (doc, image, markdown, paragraph)
 import RichText.Editor exposing (Config, Editor, Message, config, init, update, view)
+import RichText.Model.Attribute exposing (findStringAttribute)
 import RichText.Model.Element as Element
+import RichText.Model.HtmlNode exposing (HtmlNode(..))
 import RichText.Model.Node
     exposing
         ( Block
-        , Children(..)
-        , Inline(..)
         , block
         , blockChildren
         , inlineChildren
+        , inlineElement
         , plainText
         )
 import RichText.Model.State exposing (state)
@@ -30,6 +32,43 @@ main =
 --Init
 
 
+documentReference : ElementDefinition
+documentReference =
+    elementDefinition
+        { name = "image"
+        , group = "inline"
+        , contentType = inlineLeaf
+        , toHtmlNode = documentReferenceToHtmlNode
+        , fromHtmlNode = htmlNodeToDocumentReference
+        , selectable = True
+        }
+
+
+documentReferenceToHtmlNode : ElementToHtml
+documentReferenceToHtmlNode parameters _ =
+    let
+        attr =
+            filterAttributesToHtml
+                [ ( "src", Just <| Maybe.withDefault "" (findStringAttribute "src" (Element.attributes parameters)) )
+                , ( "alt", findStringAttribute "alt" (Element.attributes parameters) )
+                , ( "title", findStringAttribute "title" (Element.attributes parameters) )
+                ]
+    in
+    ElementNode "img"
+        attr
+        Array.empty
+
+
+htmlNodeToDocumentReference : HtmlToElement
+htmlNodeToDocumentReference def node =
+    case node of
+        ElementNode _ _ _ ->
+            Just <| ( Element.element def [], Array.empty )
+
+        _ ->
+            Nothing
+
+
 docNode : Block
 docNode =
     block
@@ -41,7 +80,7 @@ docNode =
                     (inlineChildren <| Array.fromList [ plainText "Hello world" ])
                 , block
                     (Element.element paragraph [])
-                    (inlineChildren <| Array.fromList [ plainText "Hello world 2" ])
+                    (inlineChildren <| Array.fromList [ inlineElement (Element.element documentReference []) [] ])
                 ]
         )
 
