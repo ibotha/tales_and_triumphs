@@ -54,7 +54,8 @@ h6 {
   padding: 0.5em;
   color: $primaryText;
   // max-width: 60ch;
-  ::selection, .ce-block--selected .ce-block__content {
+  ::selection,
+  .ce-block--selected .ce-block__content {
     background-color: $secondaryMute;
   }
   outline: none;
@@ -75,4 +76,8 @@ h6 {
 
 input {
   color: inherit;
+}
+
+img {
+  width: 10px;
 }
